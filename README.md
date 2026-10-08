@@ -1,3 +1,17 @@
+> **About this fork**
+>
+> This is a fork of [misterm2310/ambient-overlay-card](https://github.com/misterm2310/ambient-overlay-card).
+> All credit for Ambient Overlay Card goes to its creator, **[misterm2310](https://github.com/misterm2310)**:
+> thank you for a lovely card! 🙏
+>
+> The fork only adds a [`halloween/`](halloween/) folder with two standalone cards:
+> `halloween-bats-card` (bats with adjustable size and speed) and `halloween-figures-card`
+> (a skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy and vampire that cross the
+> screen at random intervals). See [halloween/README.md](halloween/README.md).
+> The original card and the documentation below are unchanged.
+
+---
+
 # Ambient Overlay Card for Home Assistant
 
 Eine benutzerdefinierte Lovelace-Karte für Home Assistant, die dynamische Animationen über dein Dashboard legt – von echtem Wetter (Regen, Schnee, Hagel, Blitz, Nebel, Sturm, Wolken-Drift) über Himmelsphänomene (Sternenhimmel, Sternschnuppen, Wunschstern, Komet, Mond mit echter Mondphase) bis zu Tieren, Deko- und Anlass-Effekten (Herbstlaub, Geburtstags-Modus, Weihnachtsmann, Spinne mit Netz, goldener Labrador, Dampflok mit optionaler Festtags-Beladung, Fledermäuse, Bienenschwarm, Eule und Vogelhäuschen). Inklusive visuellem GUI-Editor mit **Live-Vorschau**, automatischer Theme-Anpassung und Wetter-Automatik mit echten Kombi-Effekten.
