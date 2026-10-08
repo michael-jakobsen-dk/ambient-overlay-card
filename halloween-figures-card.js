@@ -3,11 +3,53 @@
 // Options: min_interval s (180), max_interval s (480), size px (600, longest side, capped at 80vh),
 //          speed_factor (0.5 = half the speed of halloween-bats-card; each figure scales it by its own
 //          speed, then by a random 0.7–1.4), opacity (0.95),
-//          figures (list, default all), first_delay s (optional, for testing).
+//          figures (list, default all), first_delay s (optional, for testing),
+//          spider_size px (280, single spider), swarm_spider_size px (110), max_spiders (10, swarm is 2..max).
 const BONE = "#ece6d4";
 const INK = "#1a1a1a";
+const WEB = "#3b2f4d";
+
+// Top-down spider facing right. Legs alternate in two groups (a/b) like a real gait.
+const SPIDER_LEGS = [
+  ["a", "M66,34 L78,16 L94,10"], ["b", "M62,31 L66,10 L76,2"],
+  ["a", "M58,31 L50,10 L42,3"], ["b", "M54,34 L38,16 L24,12"],
+  ["b", "M66,46 L78,64 L94,70"], ["a", "M62,49 L66,70 L76,78"],
+  ["b", "M58,49 L50,70 L42,77"], ["a", "M54,46 L38,64 L24,68"],
+];
+const SPIDER_SVG = `
+  <g class="scuttle" style="transform-origin:50px 40px">
+    <g fill="none" stroke="${WEB}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      ${SPIDER_LEGS.map(([g, d]) => {
+        const [x, y] = d.slice(1).split(" ")[0].split(",");
+        return `<g class="sleg-${g}" style="transform-origin:${x}px ${y}px"><path d="${d}"/></g>`;
+      }).join("")}
+      <path d="M68,34 L74,31 M68,46 L74,49" stroke-width="1.8"/>
+    </g>
+    <ellipse cx="34" cy="40" rx="22" ry="17" fill="${WEB}"/>
+    <path d="M27,33 L41,33 L35.5,40 L41,47 L27,47 L32.5,40 Z" fill="#ff7518" fill-opacity="0.9"/>
+    <ellipse cx="54" cy="40" rx="4" ry="3" fill="${WEB}"/>
+    <ellipse cx="62" cy="40" rx="10" ry="9" fill="${WEB}"/>
+    <ellipse cx="72" cy="38" rx="2.5" ry="1.6" fill="#4c3d60"/>
+    <ellipse cx="72" cy="42" rx="2.5" ry="1.6" fill="#4c3d60"/>
+    <circle class="glow-eye" cx="68.5" cy="36.5" r="1.8" fill="#ff3b3b"/>
+    <circle class="glow-eye" cx="68.5" cy="43.5" r="1.8" fill="#ff3b3b"/>
+    <circle class="glow-eye" cx="71" cy="39" r="1.1" fill="#ff3b3b"/>
+    <circle class="glow-eye" cx="71" cy="41" r="1.1" fill="#ff3b3b"/>
+  </g>`;
 
 const FIGURES = {
+  spider: {
+    speed: 1.4, look: "spider", sizeKey: "spider_size", wiggle: true,
+    vb: [100, 80], ground: false,
+    svg: SPIDER_SVG,
+  },
+
+  spiders: {
+    speed: 1.6, look: "spider", sizeKey: "swarm_spider_size", wiggle: true, swarm: true,
+    vb: [100, 80], ground: false,
+    svg: SPIDER_SVG,
+  },
+
   skeleton: {
     speed: 1.0,
     vb: [60, 100], ground: true,
@@ -240,11 +282,15 @@ const CSS = `
   .mummy .leg-a, .mummy .leg-b { animation-duration: 2.6s; }
   .cat .leg-a, .cat .leg-b { animation-duration: 0.5s; }
   .cat .bob { animation-duration: 0.5s; }
+  .sleg-a { animation: skitter 0.26s ease-in-out infinite alternate; }
+  .sleg-b { animation: skitter 0.26s ease-in-out infinite alternate-reverse; }
+  .scuttle { animation: scuttle 0.26s ease-in-out infinite alternate; }
 
   .ghost svg { filter: drop-shadow(0 0 18px rgba(200, 200, 255, 0.6)); }
   .skull svg { filter: drop-shadow(0 0 12px rgba(255, 60, 60, 0.35)); }
   .pumpkin svg { filter: drop-shadow(0 0 22px rgba(255, 140, 0, 0.55)); }
   .witch svg, .cat svg, .vampire svg { filter: drop-shadow(0 0 6px rgba(190, 150, 255, 0.7)); }
+  .spider svg { filter: drop-shadow(0 0 8px rgba(200, 160, 255, 0.9)); }
   .zombie svg { filter: drop-shadow(0 0 8px rgba(127, 176, 105, 0.5)); }
   .mummy svg, .skeleton svg { filter: drop-shadow(0 0 8px rgba(255, 245, 220, 0.4)); }
 
@@ -259,13 +305,21 @@ const CSS = `
   @keyframes tail    { from { transform: rotate(-10deg); } to { transform: rotate(12deg); } }
   @keyframes flutter { from { transform: skewX(-4deg); } to { transform: skewX(5deg); } }
   @keyframes reach   { from { transform: rotate(-6deg); } to { transform: rotate(4deg); } }
+  @keyframes skitter { from { transform: rotate(-14deg); } to { transform: rotate(10deg); } }
+  @keyframes scuttle { from { transform: rotate(-2.5deg); } to { transform: rotate(2.5deg); } }
   @keyframes flicker { 0%, 100% { opacity: 1; } 30% { opacity: 0.75; } 55% { opacity: 0.95; } 80% { opacity: 0.7; } }
 `;
 
 class HalloweenFiguresCard extends HTMLElement {
+  constructor() {
+    super();
+    this._anims = new Set();
+  }
+
   setConfig(config) {
     this._config = {
       min_interval: 180, max_interval: 480, size: 600, speed_factor: 0.5, opacity: 0.95,
+      spider_size: 280, swarm_spider_size: 110, max_spiders: 10,
       figures: Object.keys(FIGURES), first_delay: null,
       ...config,
     };
@@ -288,7 +342,7 @@ class HalloweenFiguresCard extends HTMLElement {
   disconnectedCallback() {
     clearTimeout(this._timer);
     this._timer = null;
-    if (this._anim) this._anim.cancel();
+    for (const anim of [...this._anims]) anim.cancel();
   }
 
   _schedule(delay) {
@@ -311,15 +365,27 @@ class HalloweenFiguresCard extends HTMLElement {
     const c = this._config;
     const name = this._pick();
     const fig = FIGURES[name];
+    const size = c[fig.sizeKey || "size"];
+    if (!fig.swarm) {
+      this._launch(name, fig, size, 0);
+      return;
+    }
+    // A swarm of 2..max_spiders, each a bit different in size and staggered in time.
+    const n = 2 + Math.floor(Math.random() * (Math.max(2, c.max_spiders) - 1));
+    for (let i = 0; i < n; i++) this._launch(name, fig, size * (0.6 + Math.random() * 0.4), i && Math.random() * 8);
+  }
+
+  _launch(name, fig, size, delaySec) {
+    const c = this._config;
     const [vbW, vbH] = fig.vb;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const h = Math.min((c.size * vbH) / Math.max(vbW, vbH), vh * 0.8);
+    const h = Math.min((size * vbH) / Math.max(vbW, vbH), vh * 0.8);
     const w = (h * vbW) / vbH;
     const ltr = Math.random() < 0.5;
 
     const el = document.createElement("div");
-    el.className = `fig ${name}`;
+    el.className = `fig ${fig.look || name}`;
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
     el.style.opacity = c.opacity;
@@ -334,12 +400,27 @@ class HalloweenFiguresCard extends HTMLElement {
     const speed = batSpeed * c.speed_factor * fig.speed * (0.7 + Math.random() * 0.7);
     const startX = ltr ? -w : vw;
     const endX = ltr ? vw : -w;
-    this._anim = el.animate(
-      [{ transform: `translateX(${startX}px)` }, { transform: `translateX(${endX}px)` }],
-      { duration: (Math.abs(endX - startX) / speed) * 1000, easing: "linear" },
-    );
-    this._anim.onfinish = () => el.remove();
-    this._anim.oncancel = () => el.remove();
+    // Crawlers zigzag a little up and down on their way across.
+    const wiggle = fig.wiggle ? h * 0.35 : 0;
+    const steps = wiggle ? 6 : 1;
+    const frames = Array.from({ length: steps + 1 }, (_, i) => {
+      const x = startX + ((endX - startX) * i) / steps;
+      const y = i === 0 || i === steps ? 0 : (Math.random() * 2 - 1) * wiggle;
+      return { transform: `translate(${x}px, ${y}px)` };
+    });
+    const anim = el.animate(frames, {
+      duration: (Math.abs(endX - startX) / speed) * 1000,
+      delay: delaySec * 1000,
+      easing: "linear",
+      fill: "backwards",
+    });
+    this._anims.add(anim);
+    const done = () => {
+      el.remove();
+      this._anims.delete(anim);
+    };
+    anim.onfinish = done;
+    anim.oncancel = done;
   }
 }
 

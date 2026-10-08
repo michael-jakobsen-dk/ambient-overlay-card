@@ -6,6 +6,7 @@
 >
 > Changes in this fork:
 > * Two standalone 🎃 **Halloween add-on cards**: `halloween-bats-card` and `halloween-figures-card`
+>   (skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire, a spider and spider swarms)
 >   (see [Halloween add-ons](#-halloween-add-ons) below).
 > * All texts translated to English: the editor UI, code comments and this README.
 >   The card's behaviour and configuration options are unchanged.
@@ -354,7 +355,7 @@ These effects **cannot** be selected on their own. They only appear when `event:
 
 Added in this fork: two standalone Lovelace cards that put your dashboard into Halloween mode. They work well next to the effects of Ambient Overlay Card (e.g. `spider`, `leaves` and `night_sky`), but neither one depends on it.
 
-![The nine Halloween figures](images/halloween-figures.png)
+![The Halloween figures](images/halloween-figures.png)
 
 ### `halloween-bats-card`
 
@@ -380,9 +381,11 @@ opacity: 0.7
 
 ### `halloween-figures-card`
 
-Every few minutes a large Halloween figure walks, floats, hops or flies across the screen. The wait and the choice of figure are both random, and the same figure never comes twice in a row. Each figure picks a random direction. Walkers stay on the bottom edge; flyers use the upper part of the screen.
+Every few minutes a large Halloween figure walks, floats, hops, flies or crawls across the screen. The wait and the choice of figure are both random, and the same figure never comes twice in a row. Each figure picks a random direction. Walkers stay on the bottom edge; flyers use the upper part of the screen.
 
-Figures: `skeleton`, `ghost`, `skull`, `zombie`, `pumpkin`, `witch`, `cat`, `mummy`, `vampire`.
+Figures: `skeleton`, `ghost`, `skull`, `zombie`, `pumpkin`, `witch`, `cat`, `mummy`, `vampire`, `spider` and `spiders`.
+
+The spiders are drawn from above, with legs that move in an alternating gait and glowing red eyes. They crawl in a slight zigzag anywhere on the screen. `spider` sends one large spider across. `spiders` sends a swarm of 2 up to `max_spiders` (default 10) smaller spiders. Each one in the swarm has its own size, direction, path and speed, and they start a few seconds apart.
 
 ```yaml
 type: custom:halloween-figures-card
@@ -391,7 +394,10 @@ max_interval: 480
 size: 600           # px along the longest side, capped at 80% of the screen height
 speed_factor: 0.5   # overall speed; higher = faster
 opacity: 0.95
-figures: [skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire]
+spider_size: 280      # px, single spider
+swarm_spider_size: 110
+max_spiders: 10       # a swarm has 2..max_spiders spiders
+figures: [skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire, spider, spiders]
 # first_delay: 5    # optional, for testing: first figure after 5 s
 ```
 
@@ -401,7 +407,10 @@ figures: [skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire]
 | `size` | `600` | Size in px along the figure's longest side, capped at 80% of the screen height |
 | `speed_factor` | `0.5` | Overall speed (`0.5` = half the average speed of `halloween-bats-card` with its default settings) |
 | `opacity` | `0.95` | Overall opacity |
-| `figures` | all nine | Which figures may appear |
+| `spider_size` | `280` | Size in px of the single `spider` |
+| `swarm_spider_size` | `110` | Size in px of the spiders in a swarm (each one is 60–100% of this) |
+| `max_spiders` | `10` | Maximum number of spiders in a swarm (a swarm has at least 2) |
+| `figures` | all | Which figures may appear |
 | `first_delay` | – | Seconds until the first figure (for testing). Without it, the first figure also waits a random interval |
 
 Each figure also has its own base speed, which is multiplied by a random factor between 0.7 and 1.4 on every crossing. This way the same figure can be slow one time and quicker the next:
@@ -410,6 +419,8 @@ Each figure also has its own base speed, which is multiplied by a random factor 
 |---|---|
 | 🧙 witch | 2.0 (fastest) |
 | 🐈‍⬛ cat | 1.6 |
+| 🕷️ spiders (swarm) | 1.6 |
+| 🕷️ spider | 1.4 |
 | 🎃 pumpkin | 1.3 |
 | 💀 skeleton | 1.0 |
 | ☠️ skull | 0.9 |
