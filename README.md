@@ -1,16 +1,15 @@
 > **About this fork**
 >
-> This is a fork of [misterm2310/ambient-overlay-card](https://github.com/misterm2310/ambient-overlay-card).
-> All credit for Ambient Overlay Card goes to its creator, **[misterm2310](https://github.com/misterm2310)**:
-> thank you for a lovely card! 🙏
+> A fork of [misterm2310/ambient-overlay-card](https://github.com/misterm2310/ambient-overlay-card), which adds:
 >
-> Changes in this fork:
-> * 🎃 **Halloween add-ons**: `halloween-card` puts the whole Halloween theme on your dashboard with one line.
->   It combines `halloween-bats-card`, `halloween-figures-card` (skeleton, ghost, skull, zombie, pumpkin, witch,
->   cat, mummy, vampire, a spider and spider swarms) and three effects of this card.
->   (see [Halloween add-ons](#-halloween-add-ons) below).
-> * All texts translated to English: the editor UI, code comments and this README.
->   The card's behaviour and configuration options are unchanged.
+> * 🎃 **A one-line Halloween theme**: `type: custom:halloween-card` brings bats, random Halloween figures
+>   (skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire), crawling spiders and spider swarms,
+>   a spider web, autumn leaves and a night sky. See [Halloween add-ons](#-halloween-add-ons).
+> * 🇬🇧 **English everywhere**: editor UI, code comments and README (the original is in German).
+>   The card's behaviour and options are unchanged.
+>
+> All credit for Ambient Overlay Card goes to its creator, **[misterm2310](https://github.com/misterm2310)**.
+> Thank you for a lovely card! 🙏
 
 ---
 
