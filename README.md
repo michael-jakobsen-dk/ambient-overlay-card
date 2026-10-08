@@ -5,8 +5,9 @@
 > thank you for a lovely card! 🙏
 >
 > Changes in this fork:
-> * Two standalone 🎃 **Halloween add-on cards**: `halloween-bats-card` and `halloween-figures-card`
->   (skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire, a spider and spider swarms)
+> * 🎃 **Halloween add-ons**: `halloween-card` puts the whole Halloween theme on your dashboard with one line.
+>   It combines `halloween-bats-card`, `halloween-figures-card` (skeleton, ghost, skull, zombie, pumpkin, witch,
+>   cat, mummy, vampire, a spider and spider swarms) and three effects of this card.
 >   (see [Halloween add-ons](#-halloween-add-ons) below).
 > * All texts translated to English: the editor UI, code comments and this README.
 >   The card's behaviour and configuration options are unchanged.
@@ -353,9 +354,41 @@ These effects **cannot** be selected on their own. They only appear when `event:
 
 ## 🎃 Halloween add-ons
 
-Added in this fork: two standalone Lovelace cards that put your dashboard into Halloween mode. They work well next to the effects of Ambient Overlay Card (e.g. `spider`, `leaves` and `night_sky`), but neither one depends on it.
+Added in this fork: three Lovelace cards that put your dashboard into Halloween mode.
 
 ![The Halloween figures](images/halloween-figures.png)
+
+### `halloween-card`: the whole theme in one card
+
+```yaml
+type: custom:halloween-card
+```
+
+That one line gives you everything: bats, the random Halloween figures and spider swarms, plus a spider web, orange/purple autumn leaves and the night sky from Ambient Overlay Card. When Halloween is over, delete the card.
+
+Every part is on by default. Set a part to `false` to turn it off, or give it an object to change its options. The options are the same as on the individual cards described below.
+
+```yaml
+type: custom:halloween-card
+bats:
+  size: 80
+figures:
+  min_interval: 120
+  figures: [ghost, pumpkin, witch, spiders]
+leaves: false
+```
+
+| Part | Runs | Default options |
+|---|---|---|
+| `bats` | `halloween-bats-card` | `size: 60`, `min_duration: 22`, `max_duration: 34` |
+| `figures` | `halloween-figures-card` | the card's own defaults |
+| `spider_web` | `ambient-overlay-card` with `event: spider` | `opacity_preset: medium` |
+| `leaves` | `ambient-overlay-card` with `event: leaves` | `count_preset: low`, `opacity_preset: medium`, orange/purple `leaf_colors` |
+| `night_sky` | `ambient-overlay-card` with `event: night_sky` | `count_preset: low`, `opacity_preset: low` |
+
+The `event` of the three Ambient Overlay Card parts is fixed; all their other options can be changed. `halloween-card` needs the other three cards loaded as resources (see [Installing the Halloween add-ons](#installing-the-halloween-add-ons)). If one is missing, that part is skipped and a warning is logged in the browser console.
+
+To show Halloween only at certain times, use Home Assistant's own tools, e.g. a [conditional card](https://www.home-assistant.io/dashboards/conditional/) around `halloween-card` that checks an `input_boolean`.
 
 ### `halloween-bats-card`
 
@@ -431,22 +464,24 @@ Each figure also has its own base speed, which is multiplied by a random factor 
 
 ### Installing the Halloween add-ons
 
-**With HACS:** if you installed this fork through HACS (see [Installation](#-installation)), the two files are already on your system. HACS downloads every `.js` file in the repository root, but it only registers the main card as a resource automatically. Add the other two yourself:
+**With HACS:** if you installed this fork through HACS (see [Installation](#-installation)), the two files are already on your system. HACS downloads every `.js` file in the repository root, but it only registers the main card as a resource automatically. Add the other three yourself:
 
 1. Go to **Settings → Dashboards → ⋮ → Resources → Add resource**.
-2. Add `/hacsfiles/ambient-overlay-card/halloween-bats-card.js` as **JavaScript module**.
-3. Add `/hacsfiles/ambient-overlay-card/halloween-figures-card.js` as **JavaScript module**.
-4. Reload the browser (clear the cache if the cards do not show up).
+2. Add each of these as **JavaScript module**:
+   * `/hacsfiles/ambient-overlay-card/halloween-bats-card.js`
+   * `/hacsfiles/ambient-overlay-card/halloween-figures-card.js`
+   * `/hacsfiles/ambient-overlay-card/halloween-card.js`
+3. Reload the browser (clear the cache if the cards do not show up).
 
-> 💡 HACS updates the version tag of the main card's resource for you, but not of resources you added yourself. After updating the fork, add or bump a version on the two URLs (e.g. `...halloween-figures-card.js?v=2`) so browsers fetch the new files.
+> 💡 HACS updates the version tag of the main card's resource for you, but not of resources you added yourself. After updating the fork, add or bump a version on these URLs (e.g. `...halloween-figures-card.js?v=2`) so browsers fetch the new files.
 
-**Without HACS:** copy `halloween-bats-card.js` and/or `halloween-figures-card.js` to `/config/www/`. Then add them as resources with the URLs `/local/halloween-bats-card.js` and `/local/halloween-figures-card.js` (type **JavaScript module**).
+**Without HACS:** copy `halloween-bats-card.js`, `halloween-figures-card.js` and `halloween-card.js` (plus `ambient-overlay-card.js`) to `/config/www/`. Then add them as resources with URLs like `/local/halloween-card.js` (type **JavaScript module**).
 
-Both cards take up no space on the dashboard, and their overlays use `pointer-events: none`, so everything underneath stays fully usable.
+All the Halloween cards take up no space on the dashboard, and their overlays use `pointer-events: none`, so everything underneath stays fully usable.
 
-### Example: a complete Halloween setup
+### Example: building the set by hand
 
-Put all Halloween cards in one `vertical-stack` at the end of a view. When the season is over, you only have to delete that one stack.
+`halloween-card` is the easy way. If you want full control, for example a different Ambient Overlay Card effect, you can build the same set yourself. Put the cards in one `vertical-stack` at the end of a view, so you only have to delete that one stack when the season is over.
 
 ```yaml
 type: vertical-stack
