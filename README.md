@@ -8,6 +8,10 @@
 > * 🇬🇧 **English everywhere**: editor UI, code comments and README (the original is in German).
 >   The card's behaviour and options are unchanged.
 >
+> ![The Halloween figures](https://raw.githubusercontent.com/michael-jakobsen-dk/ambient-overlay-card/main/images/halloween-figures.png)
+>
+> ![A spider swarm crossing the screen](https://raw.githubusercontent.com/michael-jakobsen-dk/ambient-overlay-card/main/images/halloween-spider-swarm.png)
+>
 > All credit for Ambient Overlay Card goes to its creator, **[misterm2310](https://github.com/misterm2310)**.
 > Thank you for a lovely card! 🙏
 
@@ -360,9 +364,9 @@ Added in this fork: three Lovelace cards that put your dashboard into Halloween 
 * 🕷️ **Crawling spiders**: now and then one big spider, or a whole **swarm of up to 10**, scuttles across the screen
 * 🕸️ A **spider web** in the corner, 🍂 **orange/purple autumn leaves** and a 🌙 **night sky** with shooting stars (from Ambient Overlay Card)
 
-![The Halloween figures](images/halloween-figures.png)
+![The Halloween figures](https://raw.githubusercontent.com/michael-jakobsen-dk/ambient-overlay-card/main/images/halloween-figures.png)
 
-![A spider swarm crossing the screen](images/halloween-spider-swarm.png)
+![A spider swarm crossing the screen](https://raw.githubusercontent.com/michael-jakobsen-dk/ambient-overlay-card/main/images/halloween-spider-swarm.png)
 
 ### `halloween-card`: the whole theme in one card
 
