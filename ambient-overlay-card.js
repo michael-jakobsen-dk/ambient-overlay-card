@@ -1,9 +1,9 @@
 /**
  * ambient-overlay-card
- * Lovelace Custom Card — stimmungsvolle Overlay-Effekte fürs Dashboard
+ * Lovelace custom card — atmospheric overlay effects for your dashboard
  */
 
-/* ============================== HELFER ============================== */
+/* ============================== HELPERS ============================== */
 
 function fireEvent(node, type, detail) {
   const event = new Event(type, { bubbles: true, composed: true });
@@ -127,10 +127,10 @@ function getOpacityValue(preset) {
   }
 }
 
-// Mondphase rein aus dem Datum berechnet (kein Home-Assistant-Sensor
-// nötig). Referenz: bekannter Neumond am 6. Januar 2000, 18:14 UTC.
-// Rückgabe: 0 = Neumond, 0.25 = zunehmender Halbmond, 0.5 = Vollmond,
-// 0.75 = abnehmender Halbmond, dann wieder Richtung 1 = Neumond.
+// Moon phase computed purely from the date (no Home Assistant sensor needed).
+// Reference: known new moon on 6 January 2000, 18:14 UTC. Returns 0 = new moon,
+// 0.25 = first quarter, 0.5 = full moon, 0.75 = last quarter, then back towards
+// 1 = new moon.
 function getMoonPhase(date) {
   const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
   const synodicMonthDays = 29.530588853;
@@ -139,26 +139,25 @@ function getMoonPhase(date) {
   return phase / synodicMonthDays;
 }
 
-// Erzeugt den SVG-Pfad für die beleuchtete Mondfläche bei einer gegebenen
-// Phase (0-1). Zunehmend wächst von rechts, abnehmend schrumpft nach
-// links (deutsche Konvention). Für Neumond/Vollmond gibt's Sonderfälle,
-// da die normale Kreisbogen-Formel dort mathematisch entartet (Radius 0).
+// Builds the SVG path for the lit part of the moon for a given phase (0-1).
+// Waxing grows from the right, waning shrinks towards the left (northern
+// hemisphere view). New moon and full moon are special cases, because the
+// normal arc formula degenerates there (radius 0).
 function moonPhasePath(cx, cy, r, phase) {
-  if (phase < 0.01 || phase > 0.99) return null; // Neumond: keine beleuchtete Fläche
-  if (Math.abs(phase - 0.5) < 0.01) return "full"; // Vollmond: komplett beleuchtet
+  if (phase < 0.01 || phase > 0.99) return null; // New moon: no lit area
+  if (Math.abs(phase - 0.5) < 0.01) return "full"; // Full moon: fully lit
   const theta = phase * 2 * Math.PI;
   let rx = r * Math.cos(theta);
-  // Mindestbreite der Sichel sichern: astronomisch korrekt wird sie kurz
-  // nach Neu-/vor Vollmond hauchdünn (kaum als Sichel erkennbar, eher ein
-  // Haarriss) - für eine klar lesbare Deko-Darstellung wird sie auf
-  // mindestens 20% der Mondscheiben-Breite begrenzt, minimal
-  // unastronomisch, aber immer eindeutig als Sichel erkennbar.
+  // Enforce a minimum crescent width: astronomically the crescent becomes
+  // hair-thin shortly after new moon / before full moon (barely recognisable).
+  // For a clearly readable decoration it is limited to at least 20% of the disc
+  // width - slightly unastronomical, but always clearly a crescent.
   const minRx = r * 0.8;
   if (rx > minRx) rx = minRx;
-  // Diese beiden Flags wurden NICHT aus einer Formel geraten, sondern für
-  // alle vier Mondviertel einzeln durchgemessen (tatsächlich gerenderte
-  // beleuchtete Fläche mit der astronomisch erwarteten verglichen) - beide
-  // Flags zusammen sind nötig, eine einzelne Flag allein reicht nicht aus.
+  // These two flags were NOT guessed from a formula; they were measured for
+  // each of the four quarters separately (actual rendered lit area compared
+  // with the astronomically expected one). Both flags are needed together, one
+  // alone is not enough.
   const sweepOuter = phase < 0.5 ? 1 : 0;
   const sweepInner = (phase < 0.5) === (rx > 0) ? 0 : 1;
   return `M${cx},${(cy - r).toFixed(2)} A${r},${r} 0 0,${sweepOuter} ${cx},${(cy + r).toFixed(2)} A${Math.abs(rx).toFixed(2)},${r} 0 0,${sweepInner} ${cx},${(cy - r).toFixed(2)} Z`;
@@ -291,10 +290,10 @@ function getCachedRandomSet(key, count, factory) {
   return _randomCache.get(cacheKey);
 }
 
-/* ============================ STATISCHE DATEN ============================ */
+/* ============================ STATIC DATA ============================ */
 
-// Wie lange ein Effekt braucht, um beim Beenden sanft auszublenden statt
-// abrupt zu verschwinden.
+// How long an effect takes to fade out smoothly when it ends, instead of
+// disappearing abruptly.
 const FADE_DURATION_MS = 2500;
 
 const WEATHER_STATE_MAP = {
@@ -319,12 +318,12 @@ function mapWeatherStateToEvents(state) {
 }
 
 const COUNT_IS_INTERVAL_TEXT = {
-  santa: "Wie oft der Weihnachtsmann vorbeifliegt: Wenig ≈ alle 5-6 Min., Mittel ≈ alle 3-4 Min., Viel ≈ alle 1-2 Min. (keine Partikelmenge, da es nur einen Schlitten gibt).",
-  dog: "Wie oft der Labrador durchläuft: Wenig ≈ alle 5-6 Min., Mittel ≈ alle 3-4 Min., Viel ≈ alle 1-2 Min. (keine Partikelmenge, da es nur einen Hund gibt).",
-  train: "Wie oft die Dampflok vorbeituckert: Wenig ≈ alle 5-6 Min., Mittel ≈ alle 3-4 Min., Viel ≈ alle 1-2 Min. (keine Partikelmenge, da es nur eine gibt).",
+  santa: "How often Santa flies by: Low ≈ every 5-6 min, Medium ≈ every 3-4 min, High ≈ every 1-2 min (not a particle amount, since there is only one sleigh).",
+  dog: "How often the Labrador runs past: Low ≈ every 5-6 min, Medium ≈ every 3-4 min, High ≈ every 1-2 min (not a particle amount, since there is only one dog).",
+  train: "How often the steam train chugs past: Low ≈ every 5-6 min, Medium ≈ every 3-4 min, High ≈ every 1-2 min (not a particle amount, since there is only one).",
 
-  night_sky: "Wie oft der Komet vorbeizieht: Wenig ≈ alle 5-6 Min., Mittel ≈ alle 3-4 Min., Viel ≈ alle 1-2 Min. Steuert gleichzeitig die Anzahl der Sternschnuppen (3 / 5 / 8).",
-  owl_birdhouse: "Wie oft tagsüber ein Vogel am Häuschen vorbeifliegt: Wenig ≈ alle 100 Sek., Mittel ≈ alle 60 Sek., Viel ≈ alle 30 Sek. (nachts sitzt dort die Eule, dann ohne Wirkung).",
+  night_sky: "How often the comet passes: Low ≈ every 5-6 min, Medium ≈ every 3-4 min, High ≈ every 1-2 min. Also controls the number of shooting stars (3 / 5 / 8).",
+  owl_birdhouse: "How often a bird visits the birdhouse during the day: Low ≈ every 100 s, Medium ≈ every 60 s, High ≈ every 30 s (at night the owl sits there, so no effect).",
 };
 
 const EVENT_CAPABILITIES = {
@@ -386,7 +385,7 @@ const FLAKES_DATA = Array.from({ length: 50 }, (_, i) => ({
   op: (Math.random() * 0.6 + 0.3).toFixed(2),
 }));
 
-/* ============================ RENDER-FUNKTIONEN ============================ */
+/* ============================ RENDER FUNCTIONS ============================ */
 
 function renderRain(cfg, hass, hostEl) {
   const color = resolveDynamicColor(cfg.color, hass, "#000000", "#ffffff", hostEl);
@@ -428,11 +427,10 @@ function renderSnow(cfg, hass, hostEl) {
   const flakes = spreadSample(FLAKES_DATA, count);
 
   const isHigh = (cfg.opacity_preset || "medium") === "high";
-  // Verzögerung aus der absoluten Uhrzeit ableiten, damit die Flocken bei
-  // einem Neu-Rendern weiterfallen statt nach oben zu springen. Das passiert
-  // beim Schnee besonders oft: der Zähler für die wachsende Schneedecke
-  // rendert alle 15 Sekunden neu - mit fester Verzögerung sprang jede
-  // Flocke dabei sichtbar ein Stück zurück nach oben.
+  // Derive the delay from the absolute clock time so the flakes keep falling
+  // after a re-render instead of jumping back up. This happens often with snow:
+  // the counter for the growing snow cover re-renders every 15 seconds, and
+  // with a fixed delay every flake visibly jumped back up a bit.
   const snowNowSec = Date.now() / 1000;
   const flakeHTML = flakes.map((f) => {
     const op = isHigh
@@ -472,11 +470,11 @@ function renderLeaves(cfg, hass, hostEl) {
   const leafShape = sanitizeLeafShape(cfg.leaf_shape) || DEFAULT_LEAF_SHAPE;
   const leaves = spreadSample(FLAKES_DATA, count);
 
-  // Periodischer Windstoß statt Dauer-Fall: "Anzahl/Frequenz" steuert jetzt
-  // wie oft ein kurzer Schwung Blätter durchs Bild weht, statt wie viele
-  // Blätter durchgehend gleichzeitig fallen. Läuft nicht mehr den ganzen
-  // Tag ununterbrochen, sondern stoßweise - fühlt sich eher nach
-  // "gelegentlicher Herbstwind" an statt nach Dauerregen.
+  // Periodic gust of wind instead of continuous falling: "count/frequency" now
+  // controls how often a short burst of leaves blows across the screen, rather
+  // than how many leaves fall at the same time. It no longer runs non-stop all
+  // day but in bursts - feels more like "an occasional autumn wind" than
+  // constant rain.
   const interval = { low: 340, medium: 210, high: 100 }[cfg.count_preset || "medium"] || 210;
   const gustPct = Math.min(35, (25 / interval) * 100);
   const nowSec = Date.now() / 1000;
@@ -491,8 +489,8 @@ function renderLeaves(cfg, hass, hostEl) {
       : (f.op * opacity).toFixed(2);
     const color = gradientColor(leafColors, i / leaves.length);
     const px = `${f.s * 1.6}px`;
-    // Jedes Blatt startet leicht zeitversetzt INNERHALB desselben
-    // Windstoß-Fensters (nicht über den ganzen Tag verteilt wie vorher).
+    // Each leaf starts slightly offset WITHIN the same gust window (not spread
+    // over the whole day as before).
     const staggerSec = f.d * (gustPct / 100) * interval * 0.7;
     const thisDelay = (baseDelay - staggerSec).toFixed(2);
     return `<i class="leaf" style="left:${f.l}vw; width:${px}; height:${px}; --leaf-op:${op}; animation-delay:${thisDelay}s; color:${color};"><svg viewBox="0 0 100 100" width="100%" height="100%">${leafShape}</svg></i>`;
@@ -552,11 +550,10 @@ function renderShootingStars(cfg, hass, hostEl) {
     offset: (Math.random() * 5).toFixed(2),
   }));
 
-  // Verzögerung aus der absoluten Uhrzeit ableiten (negativer Wert), damit
-  // die Sternschnuppen bei einem Neu-Rendern GENAU DA weiterlaufen, wo sie
-  // gerade waren. Mit einer festen positiven Verzögerung würden sie sonst
-  // jedes Mal von vorne anfangen - z. B. immer dann, wenn der Wunschstern
-  // im selben Effekt seine Position wechselt und neu gezeichnet wird.
+  // Derive the delay from the absolute clock time (negative value) so the
+  // shooting stars continue EXACTLY where they were after a re-render. With a
+  // fixed positive delay they would start over every time - e.g. whenever the
+  // wishing star in the same effect changes position and is redrawn.
   const nowSec = Date.now() / 1000;
   const starsHtml = stars.map((s) => {
     const dur = parseFloat(s.dur);
@@ -717,10 +714,9 @@ function renderSanta(cfg, hass, hostEl) {
   const nowSec = Date.now() / 1000;
   const delaySec = (-(nowSec % interval)).toFixed(2);
 
-  // Gelegentlich (etwa jeder 3. Durchflug) verliert der Schlitten ein
-  // Geschenk, das runterfällt - deterministisch nach Durchflug-Nummer
-  // bestimmt, damit ein Neu-Rendern mitten im Flug nicht plötzlich das
-  // Geschenk verschwinden/auftauchen lässt.
+  // Occasionally (roughly every 3rd pass) the sleigh drops a present that falls
+  // down - decided deterministically from the pass number, so a re-render
+  // mid-flight does not suddenly make the present disappear/appear.
   const flightNumber = Math.floor(nowSec / interval);
   const dropsGift = flightNumber % 3 === 0;
   const giftStartPct = (flightPct * 0.35).toFixed(2);
@@ -911,12 +907,11 @@ function renderSpider(cfg, hass, hostEl) {
 
 
 function renderTrain(cfg, hass, hostEl) {
-  // Dampflok mit variabler Waggon-Anzahl: vier feste Alltags-/Fest-Waggons,
-  // dazu optional ein Waggon pro zuhause befindlicher Person (aus
-  // person_entities) und ein frei beschriftbarer Waggon. Die Lok selbst
-  // sitzt in einer eigenen <g transform="translate">-Gruppe mit lokalen
-  // Koordinaten, lässt sich also einfach an die tatsächliche Zug-Länge
-  // anpassen.
+  // Steam train with a variable number of wagons: four fixed everyday/festive
+  // wagons, plus optionally one wagon per person at home (from person_entities)
+  // and a wagon with free text. The locomotive sits in its own <g
+  // transform="translate"> group with local coordinates, so it can easily be
+  // adapted to the actual train length.
   const opacity = getOpacityValue(cfg.opacity_preset || "medium");
   const isHigh = (cfg.opacity_preset || "medium") === "high";
   const finalOpacity = isHigh ? 1 : opacity;
@@ -925,22 +920,22 @@ function renderTrain(cfg, hass, hostEl) {
   const nowSec = Date.now() / 1000;
   const delaySec = (-(nowSec % interval)).toFixed(2);
 
-  // 5. mögliche Ladung "Weihnachtsmann-Sack": ersetzt die Holzscheite im
-  // letzten Waggon, aber NUR wenn der konfigurierte Sensor (z. B. ein
-  // input_boolean für die Weihnachtszeit) eingeschaltet ist.
+  // 5th possible load "Santa's sack": replaces the firewood in the last wagon,
+  // but ONLY when the configured sensor (e.g. an input_boolean for the
+  // Christmas season) is on.
   const santaActive = cfg.santa_sensor && hass?.states?.[cfg.santa_sensor]?.state === "on";
-  // Alternative Ladung "Abendessen": Geschirr und Essen statt der
-  // normalen Ladung, wenn der konfigurierte Abendessen-Sensor an ist.
-  // Weihnachten hat Vorrang, falls beide Sensoren zufällig gleichzeitig an wären.
+  // Alternative load "dinner": dishes and food instead of the normal load when
+  // the configured dinner sensor is on. Christmas takes precedence if both
+  // sensors happen to be on.
   const dinnerActive = !santaActive && cfg.dinner_sensor && hass?.states?.[cfg.dinner_sensor]?.state === "on";
   const cargo0 = santaActive ? "snowman" : dinnerActive ? "plates" : "food";
   const cargo1 = santaActive ? "santa" : dinnerActive ? "roast" : "toys";
   const cargo2 = santaActive ? "presents" : dinnerActive ? "dessert" : "mailbags";
   const cargo3 = santaActive ? "santa_sack" : dinnerActive ? "drinks" : "wood";
 
-  // Gelegentliche Gags, deterministisch nach Durchfahrt-Nummer bestimmt
-  // (kein Zufall bei jedem Rendern, damit ein Neu-Rendern mitten in der
-  // Fahrt nicht plötzlich was verschwinden/auftauchen lässt).
+  // Occasional gags, decided deterministically from the pass number (no
+  // randomness on every render, so a re-render mid-journey does not suddenly
+  // make something disappear/appear).
   const flightNumber = Math.floor(nowSec / interval);
   const hasHeartSmoke = flightNumber % 6 === 0;
   const hootPct = (parseFloat(walkPct) * 0.62).toFixed(2);
@@ -948,8 +943,8 @@ function renderTrain(cfg, hass, hostEl) {
 
   const smokeHtml = [0, 1, 2].map((i) => {
     if (i === 1 && hasHeartSmoke) {
-      // Mittlerer Rauchpuff wird ganz selten zu einer Herzform statt eines
-      // Kreises, bevor er sich beim Aufsteigen wie gewohnt wieder aufloest.
+      // Very rarely the middle smoke puff becomes a heart shape instead of a
+      // circle, before dissolving as usual while rising.
       return `
         <path class="train-smoke train-smoke-heart" d="M69,3 C67,0 62,0 62,4 C62,7 69,11 69,11 C69,11 76,7 76,4 C76,0 71,0 69,3 Z"
           fill="#d9d9d9" stroke="#1a1a1a" stroke-width="1.2"
@@ -962,10 +957,9 @@ function renderTrain(cfg, hass, hostEl) {
   `;
   }).join("");
 
-  // Zusätzliche Waggons für Personen, die gerade zuhause sind - werden
-  // hinten an die vier festen Waggons angehängt. Reihenfolge richtet sich
-  // einfach danach, wie die Entities in der Konfiguration aufgeführt sind
-  // (kein besonderer Sortier-Aufwand nötig, die Reihenfolge ist nicht wichtig).
+  // Extra wagons for people who are currently at home - attached behind the
+  // four fixed wagons. The order simply follows the order of the entities in
+  // the configuration (no sorting needed, the order does not matter).
   const personEntities = typeof cfg.person_entities === "string"
     ? cfg.person_entities.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
@@ -976,10 +970,9 @@ function renderTrain(cfg, hass, hostEl) {
       const picture = st.attributes?.entity_picture;
       const name = st.attributes?.friendly_name || st.entity_id || "?";
       const initial = name.trim().charAt(0).toUpperCase() || "?";
-      // Kreis bewusst DEUTLICH größer als die übrige Ladung und wächst
-      // dafür über den normalen Ladebereich nach oben hinaus (dort ist
-      // reichlich Platz, siehe z. B. der Weihnachtsmann-Hut) - kein
-      // Name mehr, der stattdessen Platz gekostet hätte.
+      // Circle deliberately MUCH larger than the rest of the load, growing
+      // upwards beyond the normal load area (there is plenty of room, see e.g.
+      // Santa's hat) - no name any more, which would have cost space.
       const cargoContent = picture
         ? `
           <circle cx="43" cy="-6" r="36" fill="#e8e0d0" stroke="#1a1a1a" stroke-width="1.8"/>
@@ -993,12 +986,11 @@ function renderTrain(cfg, hass, hostEl) {
       return { cargo: cargoContent, window: "" };
     });
 
-  // Zusätzliche, frei beschriftbare Waggons (z. B. für Gäste, ein
-  // Haustier oder was auch immer nicht über eine person-Entity abgebildet ist).
-  // Zwei Quellen möglich: entweder ein Sensor (z. B. input_text), dessen
-  // Inhalt komma-getrennte Namen enthält ("Marcel, Rudolf") - dann gibt es
-  // pro Name einen eigenen Waggon - oder ein fest eingetragener Text.
-  // Der Sensor hat Vorrang, falls beides gesetzt ist.
+  // Extra wagons with free text (e.g. for guests, a pet or anything else not
+  // represented by a person entity). Two possible sources: either a sensor
+  // (e.g. input_text) containing comma-separated names ("Marcel, Rudolf") - one
+  // wagon per name - or a fixed text. The sensor takes precedence if both are
+  // set.
   const customEntityRaw = cfg.custom_wagon_entity
     ? (hass?.states?.[cfg.custom_wagon_entity]?.state || "")
     : "";
@@ -1021,19 +1013,19 @@ function renderTrain(cfg, hass, hostEl) {
   };
   const customCargoList = customNames.map(makeCustomCargo);
 
-  // Gesamt-Waggon-Anzahl: vier feste + Personen + Freitext-Waggons. Nur
-  // die ANZAHL wird hier gebraucht (für Positionen/Breite) - welche
-  // konkrete Ladung in den ersten vier Waggons steckt, kommt erst weiter
-  // unten dazu (CARGO-Objekt ist an dieser Stelle noch nicht definiert).
+  // Total number of wagons: four fixed + people + free-text wagons. Only the
+  // COUNT is needed here (for positions/width) - which load goes into the first
+  // four wagons is decided further down (the CARGO object is not defined yet at
+  // this point).
   const wagonCount = 4 + personCargoList.length + customCargoList.length + 1;
   const WAGON_GAP = 93;
   const WAGON_X = Array.from({ length: wagonCount }, (_, i) => 4 + i * WAGON_GAP);
   const LOCO_X = 4 + wagonCount * WAGON_GAP + 8;
 
-  // SVG-Breite und die außen sichtbare Box wachsen mit der tatsächlichen
-  // Zug-Länge mit - beide im selben Verhältnis, damit jeder Waggon immer
-  // gleich groß bleibt (der Zug wird bei mehr Waggons länger, nicht
-  // gestaucht) und "preserveAspectRatio" nichts verzerrt oder abschneidet.
+  // The SVG width and the visible outer box grow with the actual train length -
+  // both in the same ratio, so every wagon always stays the same size (more
+  // wagons make the train longer, not squashed) and "preserveAspectRatio" does
+  // not distort or clip anything.
   const svgWidth = LOCO_X + 132;
   const svgTop = -60;
   const svgHeight = 66 - svgTop;
@@ -1057,7 +1049,7 @@ function renderTrain(cfg, hass, hostEl) {
       100% { transform: translateX(calc(100vw + ${boxWidth + 40}px)); }
     }
     .train-wheel {
-      /* Rotation entfernt (Ressourcen-Ersparnis) - Räder stehen jetzt fest */
+      /* Rotation removed (saves resources) - wheels are now static */
     }
     .train-smoke {
       animation-name: train-smoke-rise; animation-timing-function: ease-out; animation-iteration-count: infinite;
@@ -1097,13 +1089,12 @@ function renderTrain(cfg, hass, hostEl) {
     </g>
   `;
 
-  // Vier verschiedene Ladungen, die statt der einheitlichen Kohle oben auf
-  // den Waggon kommen - jede innerhalb desselben Bereichs (x=2-81, y=8-32),
-  // damit sie zum Waggon-Umriss passt.
-  // Ladungs-Motive. Bewusst wenige, dafür GROSSE Einzelteile: der
-  // Waggon ist nur 87 Einheiten breit, viele kleine Teile werden am
-  // Bildschirm zu unkenntlichen Farbklecksen. Alle Motive stehen auf
-  // dem Waggonboden (y=32) und wachsen nach oben in den freien Platz.
+  // Four different loads that go on top of the wagon instead of uniform coal -
+  // each within the same area (x=2-81, y=8-32) so it fits the wagon outline.
+  // Load motifs: deliberately few but LARGE pieces - the wagon is only 87 units
+  // wide, and many small pieces turn into unrecognisable blobs on screen. All
+  // motifs stand on the wagon floor (y=32) and grow upwards into the free
+  // space.
   const CARGO = {
     food: `
       <circle cx="18" cy="18" r="13" fill="#d81f26" stroke="#8a1015" stroke-width="1.8"/>
@@ -1215,8 +1206,8 @@ function renderTrain(cfg, hass, hostEl) {
     `,
   };
 
-  // Gesamte Waggon-Inhalts-Liste: vier feste + Personen + optional
-  // Freitext (Anzahl/Positionen wurden weiter oben schon berechnet).
+  // Complete list of wagon contents: four fixed + people + optional free text
+  // (count/positions were already computed further up).
   const endMarkerCargo = `
     <rect x="15" y="10" width="53" height="20" rx="3" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="1.5"/>
     <circle class="end-lamp-a" cx="28" cy="20" r="7" fill="#ff2222" stroke="#1a1a1a" stroke-width="1.5"/>
@@ -1256,36 +1247,36 @@ function renderTrain(cfg, hass, hostEl) {
     .map((d) => `<path d="${d}" stroke="#1a1a1a" stroke-width="2"/>`)
     .join("");
 
-  // Die komplette Lok in lokalen Koordinaten (0 = eigener Anfang), wird
-  // per translate(LOCO_X,0) an die richtige Stelle geschoben.
+  // The complete locomotive in local coordinates (0 = its own start), moved
+  // into place with translate(LOCO_X,0).
   const locoHtml = `
     <g transform="translate(${LOCO_X},0)">
-      <!-- Fahrgestell-Rahmen -->
+      <!-- Chassis frame -->
       <rect x="0" y="42" width="96" height="8" fill="#3a3a3a"/>
-      <!-- Roter Kessel -->
+      <!-- Red boiler -->
       <rect x="2" y="18" width="60" height="26" rx="10" fill="#ee1c1c" stroke="#1a1a1a" stroke-width="2.5"/>
       <path d="M18,18 L18,8 M25,18 L23,10" stroke="#ee1c1c" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Kabinen-Aufbau mit Fähnchen -->
+      <!-- Cab with small flag -->
       <path d="M56,8 L56,2 L62,8 Z" fill="#ee1c1c"/>
       <rect x="34" y="6" width="24" height="22" rx="2" fill="#ffd966" stroke="#1a1a1a" stroke-width="2.5"/>
       <path d="M38,22 L42,12" stroke="#c9a227" stroke-width="2"/>
-      <!-- Schwarze runde Nase -->
+      <!-- Black round nose -->
       <path d="M60,18 Q86,13 100,24 Q100,37 90,42 Q72,44 60,40 Z" fill="#1a1a1a"/>
-      <!-- Kleine Frontlampe -->
+      <!-- Small headlamp -->
       <circle cx="97" cy="25" r="4" fill="#fff3c4" stroke="#c9a227" stroke-width="1.3"/>
       <circle cx="97" cy="25" r="1.6" fill="#ffffff"/>
-      <!-- Schornstein -->
+      <!-- Chimney -->
       <path d="M73,17 L69,5 Q69,1 75,1 L86,1 Q92,1 92,5 L88,17 Z" fill="#f5f0e6" stroke="#1a1a1a" stroke-width="2.5"/>
-      <!-- Dampf -->
+      <!-- Steam -->
       <g>${smokeHtml}</g>
-      <!-- Hupen-Sprechblase, taucht kurz während der Fahrt auf -->
+      <!-- Horn speech bubble, appears briefly during the run -->
       <g class="train-hoot">
         <path d="M26,-6 Q26,-17 37,-17 L61,-17 Q72,-17 72,-6 Q72,4 61,4 L44,4 L38,9 L39,4 Q26,4 26,-6 Z" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.8"/>
-        <text x="49" y="-2.5" font-size="9" font-family="Georgia, serif" font-weight="bold" fill="#1a1a1a" text-anchor="middle">TUUT</text>
+        <text x="49" y="-2.5" font-size="9" font-family="Georgia, serif" font-weight="bold" fill="#1a1a1a" text-anchor="middle">TOOT</text>
       </g>
-      <!-- Kuhfänger -->
+      <!-- Cowcatcher -->
       <path d="M99,42 Q110,46 116,54 L94,54 Z" fill="#ee1c1c" stroke="#1a1a1a" stroke-width="2"/>
-      <!-- Räder Lok -->
+      <!-- Locomotive wheels -->
       <path d="M22,50 L56,50" stroke="#1a1a1a" stroke-width="3"/>
       ${wheel(20, 54, 10)}
       ${wheel(56, 54, 10)}
@@ -1297,13 +1288,13 @@ function renderTrain(cfg, hass, hostEl) {
     <div class="train-container" style="opacity:${finalOpacity};" aria-hidden="true">
       <div class="train-box" style="width:${boxWidth}px; height:${boxHeight}px; left:-${boxWidth + 24}px;">
         <svg viewBox="0 ${svgTop} ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet">
-          <!-- Boden-/Gleislinie -->
+          <!-- Ground/track line -->
           <path d="M2,58 L${svgWidth - 4},58" stroke="#1a1a1a" stroke-width="2"/>
 
-          <!-- Alle Waggons: vier feste plus optional Personen- und Freitext-Waggons -->
+          <!-- All wagons: four fixed plus optional person and free-text wagons -->
           ${allCargo.map((item, i) => wagon(WAGON_X[i], item.cargo, item.window, item.wheels || 3)).join("\n")}
 
-          <!-- Kupplungen zwischen allen Waggons und zur Lok -->
+          <!-- Couplings between all wagons and to the locomotive -->
           ${couplingsHtml}
 
           ${locoHtml}
@@ -1324,17 +1315,16 @@ function renderDog(cfg, hass, hostEl) {
   const drift = typeof cfg._drift === "number" ? cfg._drift : (Math.random() * 16 - 8);
   const delaySec = (-((Date.now() / 1000) % interval)).toFixed(2);
 
-  // Schnüffel-Pause: kurzes Anhalten + Kopf senken, bei ca. 40% der Laufstrecke.
+  // Sniffing pause: short stop + head lowered, at about 40% of the route.
   const sniffFrac = 0.4;
   const sniffStart = (walkPct * sniffFrac).toFixed(2);
   const sniffMid = (walkPct * sniffFrac + 0.8).toFixed(2);
   const sniffEnd = (walkPct * sniffFrac + 1.6).toFixed(2);
 
-  // Schütteln bei Regen: nur wenn eine echte Wetter-Entity angegeben ist UND
-  // diese aktuell Regen meldet - sonst passiert nichts (kein erfundener
-  // Zustand). Wichtig: das prüft die Entity direkt, unabhängig davon, ob
-  // irgendwo eine andere Karte gerade den Regen-Effekt zeigt - zwei Karten
-  // können sich sonst nicht gegenseitig "sehen".
+  // Shaking in the rain: only when a real weather entity is configured AND it
+  // currently reports rain - otherwise nothing happens (no invented state).
+  // Important: this checks the entity directly, regardless of whether another
+  // card is showing the rain effect - two cards cannot "see" each other.
   const rainStates = ["rainy", "pouring", "lightning-rainy", "snowy-rainy"];
   const isRaining = cfg.weather_entity && rainStates.includes(hass?.states?.[cfg.weather_entity]?.state);
 
@@ -1400,10 +1390,10 @@ function renderDog(cfg, hass, hostEl) {
       100% { transform: translateY(-2px); }
     }
     .dog-ear {
-      /* Schwingen entfernt (Ressourcen-Ersparnis) - Ohr bleibt fest */
+      /* Swinging removed (saves resources) - ear stays still */
     }
     .dog-tongue {
-      /* Wackeln entfernt (Ressourcen-Ersparnis) - Zunge bleibt fest */
+      /* Wagging removed (saves resources) - tongue stays still */
     }
     .dog-print {
       animation: dog-print-fade 1.1s ease-out infinite;
@@ -1484,11 +1474,11 @@ function renderComet(cfg, hass, hostEl) {
   const interval = { low: 340, medium: 210, high: 100 }[cfg.count_preset || "medium"] || 210;
   const flightSeconds = 3.5;
   const flightPct = Math.min(30, (flightSeconds / interval) * 100).toFixed(2);
-  // Ein- und Ausblenden MÜSSEN sich auf die Flugdauer beziehen, nicht auf
-  // feste Prozentwerte des Gesamtzyklus: bei seltenen Durchflügen ist der
-  // Flug nur ~1,7% des Zyklus lang, ein fest verdrahtetes "1%" hätte davon
-  // fast alles zum Einblenden verbraucht - der Komet wäre nur den letzten
-  // Sekundenbruchteil überhaupt zu sehen gewesen.
+  // Fade-in and fade-out MUST be relative to the flight duration, not fixed
+  // percentages of the whole cycle: with rare passes the flight is only ~1.7%
+  // of the cycle, so a hard-coded "1%" would have used almost all of it for
+  // fading in - the comet would only have been visible for the last fraction of
+  // a second.
   const cometFadeInPct = (parseFloat(flightPct) * 0.12).toFixed(3);
   const fadePct = (parseFloat(flightPct) * 1.2).toFixed(2);
   const delaySec = (-((Date.now() / 1000) % interval)).toFixed(2);
@@ -1534,11 +1524,11 @@ function renderComet(cfg, hass, hostEl) {
 }
 
 function renderBats(cfg, hass, hostEl) {
-  // Verbesserung (Bugfix): Fledermäuse waren fest schwarz - auf einem
-  // dunklen Theme-Hintergrund praktisch unsichtbar (gleiches Problem wie
-  // vorher bei den Wolken). Jetzt theme-abhängig: dunkles Grau-Violett auf
-  // hellem Hintergrund, helleres Grau-Violett auf dunklem Hintergrund -
-  // bleibt dabei bewusst "nächtlich" statt bunt.
+  // Improvement (bugfix): bats used to be solid black - practically invisible
+  // on a dark theme background (same problem as the clouds had before). Now
+  // theme-dependent: dark grey-violet on light backgrounds, lighter grey-violet
+  // on dark backgrounds - deliberately staying "nocturnal" rather than
+  // colourful.
   const color = resolveDynamicColor(cfg.color, hass, "#2a2530", "#cbc4d9", hostEl);
   const opacity = getOpacityValue(cfg.opacity_preset || "medium");
   const isHigh = (cfg.opacity_preset || "medium") === "high";
@@ -1594,19 +1584,18 @@ function renderBats(cfg, hass, hostEl) {
 }
 
 function renderBirdhouse(cfg, hass, hostEl) {
-  // Vogelhäuschen: sitzt fest oben links (kleiner als die Eule), immer
-  // sichtbar. Periodisch fliegt ein kleiner Vogel von links ins Bild,
-  // "landet" kurz am Einflugloch (kurze Pause + Flügelschlag), fliegt dann
-  // weiter nach rechts aus dem Bild. Nutzt dieselbe Startzeit-Technik wie
-  // Weihnachtsmann/Komet/Dampflok, damit ein Neu-Rendern den Anflug nicht
-  // unterbricht.
+  // Birdhouse: fixed in the top left (smaller than the owl), always visible.
+  // Periodically a small bird flies in from the left, "lands" briefly at the
+  // entrance hole (short pause + wing flaps), then flies on out of the screen
+  // to the right. Uses the same start-time technique as Santa/comet/steam train
+  // so a re-render does not interrupt the approach.
   const opacity = getOpacityValue(cfg.opacity_preset || "medium");
   const isHigh = (cfg.opacity_preset || "medium") === "high";
   const finalOpacity = isHigh ? 1 : opacity;
   const interval = { low: 100, medium: 60, high: 30 }[cfg.count_preset || "medium"] || 60;
   const delaySec = (-((Date.now() / 1000) % interval)).toFixed(2);
-  // Anteil des Zyklus für den kompletten Anflug+Vorbeiflug (Rest ist Pause,
-  // in der der Vogel unsichtbar wartet).
+  // Share of the cycle for the complete approach + fly-by (the rest is a pause
+  // in which the bird waits invisibly).
   const flightPct = Math.min(35, (9 / interval) * 100).toFixed(2);
   const birdFadeInPct = (parseFloat(flightPct) * 0.15).toFixed(3);
   const landPct = (flightPct * 0.4).toFixed(2);
@@ -1679,11 +1668,10 @@ function renderMoon(cfg, hass, hostEl) {
   const phase = getMoonPhase(new Date());
   const lightPath = moonPhasePath(29, 39, 24, phase);
 
-  // Der unbeleuchtete Mondteil braucht auf hellem und dunklem Hintergrund
-  // unterschiedliche Farben: auf Dunkel darf er kräftig dunkel sein (wirkt
-  // wie ein echter Nachthimmel-Mond), auf Hell würde dieselbe Farbe wie
-  // ein unpassender dunkler Fleck wirken - dort lieber ein dezentes,
-  // helles Grau mit dunklerem Rand zur Abgrenzung.
+  // The unlit part of the moon needs different colours on light and dark
+  // backgrounds: on dark it can be strongly dark (looks like a real night-sky
+  // moon); on light the same colour would look like an out-of-place dark blot -
+  // there a subtle light grey with a darker edge works better.
   const dark = isDarkModeActive(hass, hostEl);
   const unlitFill = dark ? "#2a3a4a" : "#d8dce0";
   const unlitStroke = dark ? "#5a6a7a" : "#a8b0b8";
@@ -1702,10 +1690,9 @@ function renderMoon(cfg, hass, hostEl) {
     }
   `;
 
-  // Fünf Krater über die ganze Mondscheibe verteilt - werden per
-  // clipPath auf den jeweils beleuchteten Bereich begrenzt, damit sie
-  // bei jeder Phase (nicht nur Vollmond) nur dort auftauchen, wo gerade
-  // wirklich Licht drauf fällt.
+  // Five craters spread over the whole disc - clipped to the lit area with a
+  // clipPath, so at every phase (not only full moon) they only appear where
+  // light actually falls.
   const craterStyle = `fill="#cfbf8c" stroke="#b09d68" stroke-width="0.7"`;
   const cratersSvg = `
     <circle cx="20" cy="29" r="4" ${craterStyle}/>
@@ -1719,7 +1706,7 @@ function renderMoon(cfg, hass, hostEl) {
 
   let moonSvg;
   if (lightPath === null) {
-    // Neumond: fast nichts zu sehen, nur der dunkle Umriss - realistisch.
+    // New moon: almost nothing visible, only the dark outline - realistic.
     moonSvg = `<circle cx="29" cy="39" r="24" fill="${unlitFill}" stroke="${unlitStroke}" stroke-width="1"/>`;
   } else if (lightPath === "full") {
     moonSvg = `
@@ -1782,9 +1769,9 @@ function renderSun(cfg, hass, hostEl) {
     }
   `;
 
-  // Lichtschein bewusst per Farbverlauf statt Weichzeichner-Filter:
-  // Filter können auf schwächeren Browsern (z. B. Fire TV) ein
-  // sichtbares Rechteck um die Figur erzeugen.
+  // Glow deliberately done with a gradient instead of a blur filter: filters
+  // can produce a visible rectangle around the figure on weaker browsers (e.g.
+  // Fire TV).
   const html = `
     <div class="sun-container" style="opacity:${finalOpacity};" aria-hidden="true">
       <svg viewBox="0 0 58 78" style="width:100%; height:100%;">
@@ -1955,26 +1942,25 @@ function renderBee(cfg, hass, hostEl) {
   return { css, html: `<div class="bee-container" aria-hidden="true">${beeHtml}</div>` };
 }
 
-// Verbesserung: erzeugt ein verzweigtes Eisblumen-/Raureif-Muster
-// mathematisch (wie schon beim Spinnennetz), das von einer Ecke (0,0)
-// diagonal ins Bild hineinwächst - Hauptäste mit kleinen Seitenzweigen.
+// Improvement: generates a branching frost/hoarfrost pattern mathematically
+// (like the spider web), growing diagonally into the screen from a corner (0,0)
+// - main branches with small side twigs.
 
 function renderClouds(cfg, hass, hostEl) {
-  // Verbesserung (Bugfix): Wolken waren fest hellgrau/weiß - auf einem
-  // hellen Theme-Hintergrund praktisch unsichtbar. Jetzt wie die anderen
-  // Wetter-Effekte theme-abhängig: dunkles Grau auf hellem Hintergrund,
-  // helles Grau auf dunklem Hintergrund.
+  // Improvement (bugfix): clouds used to be fixed light grey/white -
+  // practically invisible on a light theme background. Now theme-dependent like
+  // the other weather effects: dark grey on light backgrounds, light grey on
+  // dark backgrounds.
   const color = resolveDynamicColor(cfg.color, hass, "#57626f", "#e8edf2", hostEl);
   const opacity = getOpacityValue(cfg.opacity_preset || "medium");
   const isHigh = (cfg.opacity_preset || "medium") === "high";
   const count = getParticleCount(cfg.count_preset || "medium", "clouds");
 
   const clouds = getCachedRandomSet("clouds", count, (_, i) => {
-    // Verbesserung: Zeit-Versatz gleichmäßig über den Zyklus verteilt
-    // (Basis-Position nach Index) statt komplett zufällig - sonst können
-    // sich alle Wolken zufällig häufen und es entstehen Lücken ganz ohne
-    // sichtbare Wolke. Etwas Zufalls-Jitter obendrauf, damit es trotzdem
-    // nicht "maschinell" gleichmäßig aussieht.
+    // Improvement: time offsets spread evenly over the cycle (base position by
+    // index) instead of fully random - otherwise all clouds can bunch up and
+    // leave gaps with no visible cloud at all. A bit of random jitter on top so
+    // it still does not look "mechanically" even.
     const jitter = Math.random() * 12 - 6;
     return {
       top: (Math.random() * 82).toFixed(2),
@@ -2055,20 +2041,16 @@ function renderWishStar(cfg, hass, hostEl) {
 }
 
 function renderStars(cfg, hass, hostEl) {
-  // Sterne "teleportieren" zwischen 4 zufälligen Positionen, unsichtbar
-  // während des Sprungs (Deckkraft VOR und NACH dem Sprung explizit auf 0
-  // gehalten, damit der Browser die Bewegung nicht mit-interpoliert).
-  //
-  // Verbesserung (Ressourcen): Die Position läuft jetzt über
-  // "transform: translate()" statt über "top"/"left". Das ist ein
-  // wichtiger Unterschied: top/left-Animationen zwingen den Browser bei
-  // JEDEM Bild zu einer Layout-Neuberechnung alle anderen Elemente
-  // betreffend, während transform rein von der GPU zusammengesetzt wird
-  // (kein Layout-Reflow). Zusätzlich teilen sich jetzt ALLE Sterne EIN
-  // einziges Keyframe (vorher hatte jeder Stern sein eigenes, 25 Schritte
-  // langes Keyframe) - die individuellen Positionen/Helligkeiten kommen
-  // stattdessen aus CSS-Variablen pro Stern. Bei z. B. 55 Sternen spart
-  // das enorm an CSS-Größe und Browser-Rechenaufwand.
+  // Stars "teleport" between 4 random positions and are invisible during the
+  // jump (opacity explicitly held at 0 BEFORE and AFTER the jump so the browser
+  // does not interpolate the movement). Improvement (resources): the position
+  // now uses "transform: translate()" instead of "top"/"left". This matters:
+  // top/left animations force the browser to recalculate layout for other
+  // elements on EVERY frame, while transform is composited purely on the GPU
+  // (no layout reflow). In addition ALL stars now share ONE keyframe
+  // (previously every star had its own 25-step keyframe) - the individual
+  // positions/brightness come from per-star CSS variables instead. With e.g. 55
+  // stars this saves a lot of CSS size and browser work.
   const color = resolveDynamicColor(cfg.color, hass, "#000000", "#ffffff", hostEl);
   const count = getParticleCount(cfg.count_preset || "medium", "stars");
   const opacity = getOpacityValue(cfg.opacity_preset || "medium");
@@ -2091,10 +2073,10 @@ function renderStars(cfg, hass, hostEl) {
       : Math.max(parseFloat(s.baseOp) * opacity, 0.35);
     const glow = (parseFloat(s.size) * 2.5).toFixed(2);
     const [p1, p2, p3, p4] = s.waypoints;
-    // Jede Position wird relativ zur eigenen Startposition (top/left als
-    // normale, EINMALIGE Platzierung - keine Animation) über eine
-    // Verschiebung (translate) in vw/vh ausgedrückt. Da top1/left1 der
-    // Basispunkt ist, ist die erste Verschiebung (0,0).
+    // Each position is expressed as a shift (translate) in vw/vh relative to
+    // the star's own start position (top/left as a normal ONE-TIME placement -
+    // no animation). Since top1/left1 is the base point, the first shift is
+    // (0,0).
     const dx2 = (parseFloat(p2.left) - parseFloat(p1.left)).toFixed(2);
     const dy2 = (parseFloat(p2.top) - parseFloat(p1.top)).toFixed(2);
     const dx3 = (parseFloat(p3.left) - parseFloat(p1.left)).toFixed(2);
@@ -2112,10 +2094,10 @@ function renderStars(cfg, hass, hostEl) {
       animation-name: star-teleport-cycle; animation-timing-function: linear; animation-iteration-count: infinite;
       will-change: opacity, transform;
     }
-    /* Ein einziges gemeinsames Keyframe für ALLE Sterne. Sanft aufblitzen
-       (4%), lange ruhig halten (14%), sanft verblassen (3%), dann in
-       einem winzigen 0,4%-Fenster mit Deckkraft explizit auf 0 vor UND
-       nach dem Sprung lautlos zur nächsten Position (translate) springen. */
+    /* One shared keyframe for ALL stars. Flash in gently (4%), hold calmly for a
+       long time (14%), fade out gently (3%), then in a tiny 0.4% window - with
+       opacity explicitly at 0 before AND after the jump - silently jump to the
+       next position (translate). */
     @keyframes star-teleport-cycle {
       0%     { opacity: 0; transform: translate(0,0) scale(0.3); }
       4%     { opacity: var(--peak); transform: translate(0,0) scale(1.1); }
@@ -2238,9 +2220,8 @@ function renderBirthday(cfg, hass, hostEl) {
       50% { transform: translateX(-50%) translateY(-4px); }
     }
   `;
-  // Welche Bestandteile angezeigt werden, wird im Editor angekreuzt.
-  // Ohne gesetzten Wert ist alles an (wie bisher), damit bestehende
-  // Konfigurationen unverändert aussehen.
+  // Which parts are shown is ticked in the editor. Without a value everything
+  // is on (as before), so existing configurations look unchanged.
   const showBalloons = cfg.birthday_balloons !== false;
   const showConfetti = cfg.birthday_confetti !== false;
   const showBanner = cfg.birthday_banner !== false;
@@ -2262,10 +2243,10 @@ function renderBirthday(cfg, hass, hostEl) {
   return { css: css + (lightsPart ? "\n" + lightsPart.css : ""), html };
 }
 
-// Sammel-Effekt "Nachthimmel": bündelt Sternschnuppen, Wunschstern und
-// Komet. Welche Bestandteile laufen, wird im Editor angekreuzt. Der
-// Sternenhimmel selbst gehört bewusst NICHT dazu, der kommt weiterhin
-// automatisch über die Wetter-Automatik bei klarer Nacht.
+// Combined effect "night sky": bundles shooting stars, wishing star and comet.
+// Which parts run is ticked in the editor. The starry sky itself is
+// deliberately NOT included - it still comes automatically from the weather
+// automation on clear nights.
 function renderNightSky(cfg, hass, hostEl) {
   const parts = [];
   if (cfg.night_shooting_stars !== false) parts.push(renderShootingStars(cfg, hass, hostEl));
@@ -2277,10 +2258,9 @@ function renderNightSky(cfg, hass, hostEl) {
   };
 }
 
-// Sammel-Effekt "Eule & Vogelhäuschen": beide teilen sich denselben Platz
-// oben links und lösen sich nach Sonnenstand ab - tagsüber das
-// Vogelhäuschen, nachts die Eule. Ohne sun.sun-Entity wird das
-// Vogelhäuschen gezeigt.
+// Combined effect "owl & birdhouse": both share the same spot in the top left
+// and take turns based on the sun - the birdhouse during the day, the owl at
+// night. Without a sun.sun entity the birdhouse is shown.
 function renderOwlBirdhouse(cfg, hass, hostEl) {
   const sunState = hass?.states?.["sun.sun"]?.state;
   const isNight = sunState === "below_horizon";
@@ -2310,7 +2290,7 @@ const RENDERERS = {
   birthday: renderBirthday,
 };
 
-/* ============================== HAUPT-KARTE ============================== */
+/* ============================== MAIN CARD ============================== */
 
 class AmbientOverlayCard extends HTMLElement {
   constructor() {
@@ -2327,11 +2307,11 @@ class AmbientOverlayCard extends HTMLElement {
     this._wishstarTimer = null;
     this._wishstarPos = null;
     this._starsReshuffleTimer = null;
-    // Verbesserung: statt einen Effekt beim Beenden sofort komplett aus
-    // dem DOM zu entfernen, merkt sich diese Map, welche Effekte gerade
-    // "aktiv" sind und welche gerade "ausblenden" (mit Startzeitpunkt des
-    // Ausblendens). So kann jeder Effekt sanft verblassen statt abrupt zu
-    // verschwinden - siehe _updateEffectLayers() weiter unten.
+    // Improvement: instead of removing an effect from the DOM immediately when
+    // it ends, this map remembers which effects are "active" and which are
+    // "fading out" (with the time the fade started). That way every effect can
+    // fade smoothly instead of disappearing abruptly - see
+    // _updateEffectLayers() further down.
     this._effectLayers = new Map();
     this._fadeRemovalTimers = new Map();
   }
@@ -2339,28 +2319,26 @@ class AmbientOverlayCard extends HTMLElement {
   _ensurePortal() {
     if (this._portalHost) return;
     this._portalHost = document.createElement("div");
-    // Verbesserung (Bugfix): "position: fixed" allein reicht nicht immer -
-    // manche Custom Cards (z. B. Swipe-/Karussell-Karten mit Fade-Übergang)
-    // nutzen selbst einen hohen z-index für ihre eigenen Übergangs-
-    // Animationen und können dadurch über unseren Effekten liegen. Ein
-    // extrem hoher, praktisch nie überbotener z-index-Wert stellt sicher,
-    // dass unser Effekt-Container IMMER ganz oben liegt, egal was sonst
-    // noch auf der Seite ist.
-    // Verbesserung: läuft die Dampflok als EIGENE Karte gleichzeitig mit
-    // einem anderen Effekt, der ebenfalls unten am
-    // Rand sitzt), sollen sich beide nicht zufällig überdecken je nachdem
-    // welche Karte zuerst geladen wurde - die Lok bekommt deshalb einen
-    // minimal höheren Wert und fährt dadurch IMMER sichtbar davor her.
+    // Improvement (bugfix): "position: fixed" alone is not always enough - some
+    // custom cards (e.g. swipe/carousel cards with fade transitions) use a high
+    // z-index for their own transition animations and can end up above our
+    // effects. An extremely high z-index that is practically never exceeded
+    // makes sure our effect container is ALWAYS on top, whatever else is on the
+    // page.
+    // Improvement: when the steam train runs as its OWN card at the same time
+    // as another effect that also sits at the bottom edge, the two should not
+    // randomly cover each other depending on which card loaded first - so the
+    // train gets a slightly higher value and ALWAYS drives visibly in front.
     this._portalHost.style.cssText = `position:fixed; top:0; left:0; width:0; height:0; pointer-events:none;`;
     this._applyPortalZIndex();
     this._portalShadow = this._portalHost.attachShadow({ mode: "open" });
     document.body.appendChild(this._portalHost);
   }
 
-  // Muss bei JEDEM Rendern neu gesetzt werden, nicht nur beim Anlegen:
-  // wird eine bestehende Karte im Editor nachträglich auf die Dampflok
-  // umgestellt (oder umgekehrt), bliebe der Wert sonst auf dem Stand von
-  // damals stehen und die Lok läge plötzlich hinter einem anderen Effekt.
+  // Must be set on EVERY render, not only when created: if an existing card is
+  // later switched to the steam train in the editor (or the other way round),
+  // the value would otherwise stay as it was and the train would suddenly be
+  // behind another effect.
   _applyPortalZIndex() {
     if (!this._portalHost) return;
     this._portalHost.style.zIndex = this._config?.event === "train" ? "2147483647" : "2147483646";
@@ -2372,7 +2350,7 @@ class AmbientOverlayCard extends HTMLElement {
     const checkIsVisible = () => {
       if (!this.isConnected) return false;
 
-      // Traversierung durch das Root-Dom sowie durch alle Shadow DOM Grenzen hinweg
+      // Traverse the root DOM and across all shadow DOM boundaries
       let node = this;
       while (node) {
         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -2390,10 +2368,10 @@ class AmbientOverlayCard extends HTMLElement {
         }
       }
 
-      // Prüfen, ob die Karte eine echte Position im Layout hat
+      // Check whether the card has a real position in the layout
       const rect = this.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0 && this.offsetParent === null) {
-        // Falls die Karte durch HA als Container ausgeblendet wird
+        // In case HA hides the card as a container
         const parent = this.parentElement || (this.getRootNode() && this.getRootNode().host);
         if (parent) {
           const pStyle = window.getComputedStyle(parent);
@@ -2500,32 +2478,29 @@ class AmbientOverlayCard extends HTMLElement {
     const weatherEntity = this._config?.weather_entity;
     const oldWeatherState = weatherEntity ? this._hass?.states?.[weatherEntity]?.state : undefined;
 
-    // Zusätzlich auf Änderungen bei santa_sensor/dinner_sensor prüfen -
-    // sonst würde die Karte nie neu rendern, wenn sich NUR einer von
-    // diesen beiden ändert (z. B. Abendessen-Schalter an/aus), ohne dass
-    // sich gleichzeitig auch der Wetter-Zustand ändert.
+    // Also watch santa_sensor/dinner_sensor for changes - otherwise the card
+    // would never re-render when ONLY one of these changes (e.g. the dinner
+    // switch on/off) without the weather state changing at the same time.
     const santaEntity = this._config?.santa_sensor;
     const oldSantaState = santaEntity ? this._hass?.states?.[santaEntity]?.state : undefined;
     const dinnerEntity = this._config?.dinner_sensor;
     const oldDinnerState = dinnerEntity ? this._hass?.states?.[dinnerEntity]?.state : undefined;
-    // Zusätzlich auf sun.sun prüfen - sonst erscheint der Mond (bzw. die
-    // Sonne) nicht direkt bei Sonnenauf-/untergang, sondern erst beim
-    // nächsten Neu-Rendern aus einem ganz anderen Grund (z. B. der
-    // nächsten Wetter-Aktualisierung) - man müsste sonst manuell die
-    // Seite neu laden, damit es rechtzeitig auftaucht.
+    // Also watch sun.sun - otherwise the moon (or the sun) would not appear
+    // right at sunset/sunrise, but only at the next re-render for some
+    // unrelated reason (e.g. the next weather update) - you would have to
+    // reload the page manually for it to show up in time.
     const oldSunState = this._hass?.states?.["sun.sun"]?.state;
 
-    // Zusätzlich auf Änderungen bei ALLEN konfigurierten person_entities
-    // prüfen - sonst würde der Zug nicht mitbekommen, wenn jemand nach
-    // Hause kommt oder geht, solange nicht zufällig gleichzeitig auch
-    // Wetter/Sensoren sich ändern.
+    // Also watch ALL configured person_entities for changes - otherwise the
+    // train would not notice when someone comes home or leaves, unless
+    // weather/sensors happened to change at the same time.
     const personEntitiesForWatch = typeof this._config?.person_entities === "string"
       ? this._config.person_entities.split(",").map((s) => s.trim()).filter(Boolean)
       : [];
     const oldPersonStates = personEntitiesForWatch.map((eid) => this._hass?.states?.[eid]?.state);
 
-    // Ebenso den Gäste-Sensor überwachen - sonst würden neu eingetragene
-    // Namen erst beim nächsten Rendern aus einem anderen Grund auftauchen.
+    // Watch the guest sensor as well - otherwise newly entered names would only
+    // show up at the next re-render for some other reason.
     const guestEntity = this._config?.custom_wagon_entity;
     const oldGuestState = guestEntity ? this._hass?.states?.[guestEntity]?.state : undefined;
 
@@ -2541,9 +2516,8 @@ class AmbientOverlayCard extends HTMLElement {
     const weatherChanged = oldWeatherState !== newWeatherState;
     const sensorChanged = oldSantaState !== newSantaState || oldDinnerState !== newDinnerState || oldSunState !== newSunState || oldGuestState !== newGuestState || personsChanged;
 
-    // Sanftes Ausblenden nur bei einer ECHTEN automatischen Wetteränderung
-    // (nicht beim allerersten Rendern - da gibt's ja noch nichts, von dem
-    // aus geblendet werden könnte).
+    // Smooth fade-out only on a REAL automatic weather change (not on the very
+    // first render - there is nothing to fade from yet).
     const isRealWeatherChange = this._hasRenderedOnce && weatherChanged;
 
     if (!this._hasRenderedOnce || weatherChanged || sensorChanged) {
@@ -2563,18 +2537,16 @@ class AmbientOverlayCard extends HTMLElement {
       } else {
         events = ["off"];
       }
-      // Mond zusätzlich einblenden, sobald die Sonne untergegangen ist -
-      // unabhängig vom eigentlichen Wetter-Zustand (also auch bei
-      // bewölkter Nacht, nicht nur bei "clear-night"). Nutzt die in jeder
-      // Home-Assistant-Installation vorhandene eingebaute sun.sun-Entity,
-      // kein zusätzlicher Sensor oder Konfiguration nötig.
+      // Also show the moon as soon as the sun has set - independent of the
+      // actual weather state (so also on a cloudy night, not only on
+      // "clear-night"). Uses the built-in sun.sun entity present in every Home
+      // Assistant installation, no extra sensor or configuration needed.
       const sunState = this._hass?.states?.["sun.sun"]?.state;
       if (sunState === "below_horizon") {
-        // Die Sonne darf nachts nicht stehenbleiben: manche Wetter-
-        // Integrationen melden den TAGES-Zustand und bleiben auch nach
-        // Sonnenuntergang auf "sunny". Ohne diese Zeile lägen Sonne und
-        // Mond exakt übereinander (beide sitzen oben rechts) und ergäben
-        // ein seltsames Mischbild.
+        // The sun must not stay up at night: some weather integrations report
+        // the DAYTIME condition and stay on "sunny" even after sunset. Without
+        // this line sun and moon would sit exactly on top of each other (both
+        // are in the top right) and create a strange mixed image.
         events = events.filter((e) => e !== "off" && e !== "sun");
         if (!events.includes("moon")) events.push("moon");
       }
@@ -2586,9 +2558,10 @@ class AmbientOverlayCard extends HTMLElement {
   getCardSize() { return 0; }
 
   static getStubConfig() {
-    // Muss ein im Dropdown WAEHLBARER Effekt sein (siehe EVENT_CAPABILITIES),
-    // sonst steht eine frisch hinzugefuegte Karte ohne Auswahl und ohne
-    // Regler da. "night_sky" laeuft sofort, ganz ohne weitere Einstellungen.
+    // Must be an effect that can be SELECTED in the dropdown (see
+    // EVENT_CAPABILITIES), otherwise a newly added card would show no selection
+    // and no controls. "night_sky" runs immediately without any further
+    // settings.
     return { event: "night_sky", count_preset: "medium", opacity_preset: "medium", color: "auto" };
   }
 
@@ -2615,8 +2588,8 @@ class AmbientOverlayCard extends HTMLElement {
   }
 
   _updateWishstar(events) {
-    // Der Wunschstern steckt jetzt im Sammel-Effekt "Nachthimmel" und
-    // läuft nur, wenn er dort auch angehakt ist.
+    // The wishing star is now part of the combined "night sky" effect and only
+    // runs when it is ticked there.
     const wishstarActive = events.includes("night_sky") && this._config?.night_wishstar !== false;
     if (wishstarActive) {
       if (!this._wishstarTimer) {
@@ -2640,12 +2613,11 @@ class AmbientOverlayCard extends HTMLElement {
     }
   }
 
-  // Verbesserung (Ressourcen): statt jede Sekunde zu prüfen, welcher Stern
-  // "fällig" ist, mischt dieser Timer alle 4 Minuten AUF EINMAL die
-  // Positionen aller Sterne komplett neu (per Cache-Löschung + Neu-Rendern).
-  // Zwischen den Reshuffles läuft alles rein über CSS, ganz ohne
-  // JavaScript-Beteiligung - das spart 239 von 240 Sekunden komplett den
-  // Timer-Aufwand, verglichen mit einer Sekunden-Prüfung.
+  // Improvement (resources): instead of checking every second which star is
+  // "due", this timer reshuffles the positions of all stars AT ONCE every 4
+  // minutes (cache clear + re-render). Between reshuffles everything runs
+  // purely in CSS without any JavaScript - that saves 239 of 240 seconds of
+  // timer work compared with a per-second check.
   _updateStarsReshuffle(events) {
     if (events.includes("stars")) {
       if (!this._starsReshuffleTimer) {
@@ -2663,11 +2635,11 @@ class AmbientOverlayCard extends HTMLElement {
     }
   }
 
-  // Verbesserung: sorgt dafür, dass ein Effekt beim Beenden nicht sofort
-  // verschwindet, sondern erst als "ausblendend" markiert und nach der
-  // Fade-Dauer (FADE_DURATION_MS) endgültig entfernt wird. Wird ein Effekt
-  // während des Ausblendens wieder aktiviert (z. B. schnell wechselndes
-  // Wetter), springt er sofort zurück auf voll sichtbar.
+  // Improvement: makes sure an effect does not disappear immediately when it
+  // ends, but is first marked as "fading out" and only removed for good after
+  // the fade duration (FADE_DURATION_MS). If an effect is re-activated while
+  // fading out (e.g. rapidly changing weather), it jumps straight back to fully
+  // visible.
   _updateEffectLayers(events, allowFade) {
     for (const ev of events) {
       const existing = this._effectLayers.get(ev);
@@ -2678,11 +2650,10 @@ class AmbientOverlayCard extends HTMLElement {
     for (const [key, state] of this._effectLayers.entries()) {
       if (!events.includes(key) && state.fadeStartedAt === null) {
         if (!allowFade) {
-          // Manueller Wechsel (Editor-Dropdown) oder interner Timer -
-          // sofort entfernen, kein Ausblenden. Sanftes Ausblenden gibt's
-          // nur, wenn sich das Wetter selbstständig ändert (siehe set
-          // hass() weiter oben) - dort schaut man ja nicht zwangsläufig
-          // gerade auf den Bildschirm.
+          // Manual change (editor dropdown) or internal timer - remove
+          // immediately, no fade-out. Smooth fading only happens when the
+          // weather changes by itself (see set hass() above) - in that case you
+          // are not necessarily looking at the screen.
           this._effectLayers.delete(key);
           if (this._fadeRemovalTimers.has(key)) {
             clearTimeout(this._fadeRemovalTimers.get(key));
@@ -2720,11 +2691,10 @@ class AmbientOverlayCard extends HTMLElement {
     this._updateStarsReshuffle(events);
     this._updateEffectLayers(events, allowFade);
 
-    // Verbesserung: Startzeiten periodischer Effekte (Hund, Weihnachtsmann,
-    // Komet) erst aufräumen, wenn der Effekt WIRKLICH komplett weg ist
-    // (auch aus den Fade-Layern) - sonst würde die Position/Startzeit
-    // während des sanften Ausblendens plötzlich zurückgesetzt und der
-    // Effekt würde beim Verblassen sichtbar "springen".
+    // Improvement: only clear the start times of periodic effects (dog, Santa,
+    // comet) once the effect is REALLY completely gone (including the fade
+    // layers) - otherwise the position/start time would suddenly reset during
+    // the smooth fade-out and the effect would visibly "jump" while fading.
     for (const key of Object.keys(this._periodicStartTimes)) {
       if (!this._effectLayers.has(key)) delete this._periodicStartTimes[key];
     }
@@ -2740,9 +2710,9 @@ class AmbientOverlayCard extends HTMLElement {
       if (event === "snow") {
         cfgForRender = { ...this._config, _snowLevel: this._snowLevel };
       } else if (event === "night_sky") {
-        // Der Wunschstern steckt im Sammel-Effekt "Nachthimmel" - die
-        // zufällige Position muss also unter DIESEM Namen durchgereicht
-        // werden, sonst landet der Stern immer auf dem Standardwert.
+        // The wishing star is part of the combined "night sky" effect - so the
+        // random position must be passed through under THAT name, otherwise the
+        // star always lands on the default value.
         cfgForRender = { ...this._config, _wishstarPos: this._wishstarPos };
       } else if (event === "dog") {
         if (!this._periodicStartTimes[event]) {
@@ -2764,11 +2734,10 @@ class AmbientOverlayCard extends HTMLElement {
       }
       const { css, html } = renderer(cfgForRender, this._hass, this);
       combinedCss += css;
-      // Fading-Layer bekommen eine "resume mid-animation"-Verzögerung wie
-      // bei santa/dog/comet: negativer animation-delay aus der bereits
-      // verstrichenen Ausblend-Zeit, damit ein Neu-Rendern während des
-      // Verblassens (z. B. durch andere laufende Timer) den Fade nicht
-      // wieder von vorne beginnen lässt.
+      // Fading layers get a "resume mid-animation" delay like santa/dog/comet:
+      // a negative animation-delay from the fade time already elapsed, so a
+      // re-render during the fade (e.g. caused by other running timers) does
+      // not restart the fade from the beginning.
       const layerStyle = state.fadeStartedAt !== null
         ? `animation: fx-fade-out ${(FADE_DURATION_MS / 1000).toFixed(2)}s linear forwards; animation-delay: -${((Date.now() - state.fadeStartedAt) / 1000).toFixed(2)}s;`
         : "opacity: 1;";
@@ -2780,7 +2749,7 @@ class AmbientOverlayCard extends HTMLElement {
   }
 }
 
-/* ============================== VISUELLER EDITOR ============================== */
+/* ============================== VISUAL EDITOR ============================== */
 
 class AmbientOverlayCardEditor extends HTMLElement {
   setConfig(config) {
@@ -2877,76 +2846,76 @@ class AmbientOverlayCardEditor extends HTMLElement {
           <div id="live-preview-stage" style="position:absolute; top:0; left:0; width:100vw; height:100vh; transform: scale(0.16); transform-origin: top left;"></div>
           <div id="live-preview-msg" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.55); font-size:12px; text-align:center; padding:0 16px;"></div>
         </div>
-        ${this._row("Effekt", `
+        ${this._row("Effect", `
           <select id="event" style="width:100%; padding:6px;">
-            <option value="off" ${c.event === "off" ? "selected" : ""}>Aus</option>
-            <option value="weather_auto" ${isWeatherAuto ? "selected" : ""}>🌦️ Automatisch (nach Wetter)</option>
-            <option value="night_sky" ${c.event === "night_sky" ? "selected" : ""}>🌠 Nachthimmel</option>
-            <option value="owl_birdhouse" ${c.event === "owl_birdhouse" ? "selected" : ""}>🦉🐦 Eule &amp; Vogelhäuschen</option>
-            <option value="birthday" ${isBirthday ? "selected" : ""}>🎂 Geburtstags-Modus</option>
-            <option value="leaves" ${c.event === "leaves" ? "selected" : ""}>🍂 Laub</option>
-            <option value="santa" ${c.event === "santa" ? "selected" : ""}>🎅 Weihnachtsmann</option>
-            <option value="train" ${c.event === "train" ? "selected" : ""}>🚂 Dampflok</option>
-            <option value="dog" ${c.event === "dog" ? "selected" : ""}>🐕 Goldener Labrador</option>
-            <option value="spider" ${c.event === "spider" ? "selected" : ""}>🕷️ Spinne mit Netz</option>
-            <option value="bats" ${c.event === "bats" ? "selected" : ""}>🦇 Fledermäuse</option>
-            <option value="bee" ${c.event === "bee" ? "selected" : ""}>🐝 Bienen</option>
+            <option value="off" ${c.event === "off" ? "selected" : ""}>Off</option>
+            <option value="weather_auto" ${isWeatherAuto ? "selected" : ""}>🌦️ Automatic (follows weather)</option>
+            <option value="night_sky" ${c.event === "night_sky" ? "selected" : ""}>🌠 Night sky</option>
+            <option value="owl_birdhouse" ${c.event === "owl_birdhouse" ? "selected" : ""}>🦉🐦 Owl &amp; birdhouse</option>
+            <option value="birthday" ${isBirthday ? "selected" : ""}>🎂 Birthday mode</option>
+            <option value="leaves" ${c.event === "leaves" ? "selected" : ""}>🍂 Autumn leaves</option>
+            <option value="santa" ${c.event === "santa" ? "selected" : ""}>🎅 Santa Claus</option>
+            <option value="train" ${c.event === "train" ? "selected" : ""}>🚂 Steam train</option>
+            <option value="dog" ${c.event === "dog" ? "selected" : ""}>🐕 Golden Labrador</option>
+            <option value="spider" ${c.event === "spider" ? "selected" : ""}>🕷️ Spider with web</option>
+            <option value="bats" ${c.event === "bats" ? "selected" : ""}>🦇 Bats</option>
+            <option value="bee" ${c.event === "bee" ? "selected" : ""}>🐝 Bees</option>
           </select>
         `, isWeatherAuto
-          ? "Bei 'Automatisch' entscheidet der Zustand deiner Wetter-Entity unten, welcher Effekt läuft."
-          : "Welcher Effekt manuell dauerhaft angezeigt wird."
+          ? "With 'Automatic', the state of your weather entity below decides which effect runs."
+          : "Which effect is shown permanently."
         )}
 
-        ${isBirthday ? this._row("Was soll gezeigt werden?", `
+        ${isBirthday ? this._row("What should be shown?", `
           <div style="border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:8px;">
-            ${[["birthday_balloons","Luftballons"],["birthday_confetti","Konfetti"],["birthday_banner","Schild / Wimpelkette"],["birthday_lights","Lichterkette"]].map(([key,label]) =>
+            ${[["birthday_balloons","Balloons"],["birthday_confetti","Confetti"],["birthday_banner","Sign / bunting"],["birthday_lights","Fairy lights"]].map(([key,label]) =>
               `<label style="display:flex; align-items:center; gap:6px; padding:3px 0; cursor:pointer;"><input type="checkbox" class="part-toggle" data-key="${key}" ${c[key] !== false ? "checked" : ""} /> ${label}</label>`
             ).join("")}
           </div>
-        `, "Einzeln an- und abwählbar. Mindestens eins sollte angehakt sein, sonst bleibt der Bildschirm leer.") : ""}
+        `, "Each part can be switched on or off. Tick at least one, otherwise the screen stays empty.") : ""}
 
-        ${isNightSky ? this._row("Was soll gezeigt werden?", `
+        ${isNightSky ? this._row("What should be shown?", `
           <div style="border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:8px;">
-            ${[["night_shooting_stars","Sternschnuppen"],["night_wishstar","Wunschstern-Funkeln"],["night_comet","Komet"]].map(([key,label]) =>
+            ${[["night_shooting_stars","Shooting stars"],["night_wishstar","Twinkling wishing star"],["night_comet","Comet"]].map(([key,label]) =>
               `<label style="display:flex; align-items:center; gap:6px; padding:3px 0; cursor:pointer;"><input type="checkbox" class="part-toggle" data-key="${key}" ${c[key] !== false ? "checked" : ""} /> ${label}</label>`
             ).join("")}
           </div>
-        `, "Einzeln an- und abwählbar. Der Sternenhimmel selbst läuft weiterhin automatisch bei klarer Nacht über die Wetter-Automatik.") : ""}
+        `, "Each part can be switched on or off. The starry sky itself still runs automatically on clear nights via the weather automation.") : ""}
 
-        ${isBirthday ? this._row("Banner-Text", `
+        ${isBirthday ? this._row("Banner text", `
           <input id="birthday_text" type="text" value="${c.birthday_text ? c.birthday_text.replace(/"/g, "&quot;") : ""}" placeholder="Happy Birthday!" style="width:100%; padding:6px; box-sizing:border-box;" />
-        `, "Text im Banner oben - z. B. 'Happy Birthday, Max!' für eine persönliche Note.") : ""}
+        `, "Text on the banner at the top - e.g. 'Happy Birthday, Max!' for a personal touch.") : ""}
 
         ${isTrain ? (
           booleanEntities.length > 0
-            ? this._row("Weihnachtsmann-Sensor (optional)", `
+            ? this._row("Christmas sensor (optional)", `
                 <select id="santa_sensor" style="width:100%; padding:6px;">
-                  <option value="" ${!c.santa_sensor ? "selected" : ""}>-- keiner (immer Holzscheite) --</option>
+                  <option value="" ${!c.santa_sensor ? "selected" : ""}>-- none (always firewood) --</option>
                   ${booleanEntities.map((eid) => {
                     const friendly = this._hass.states[eid]?.attributes?.friendly_name || eid;
                     return `<option value="${eid}" ${c.santa_sensor === eid ? "selected" : ""}>${friendly}</option>`;
                   }).join("")}
                 </select>
-              `, "Optional: ist dieser Schalter/Sensor 'an', werden drei Waggons festlich beladen - Schneemann, Weihnachtsmann und ein roter Geschenke-Sack statt Obst, Bauklötzen und Holzscheiten.")
-            : this._row("Weihnachtsmann-Sensor (optional)", `<input id="santa_sensor" type="text" placeholder="input_boolean.weihnachtszeit" value="${c.santa_sensor || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: ist dieser Schalter/Sensor 'an', werden drei Waggons festlich beladen - Schneemann, Weihnachtsmann und ein roter Geschenke-Sack statt Obst, Bauklötzen und Holzscheiten.")
+              `, "Optional: when this switch/sensor is 'on', three wagons get a festive load - a snowman, Santa and a red sack of presents instead of fruit, toy blocks and firewood.")
+            : this._row("Christmas sensor (optional)", `<input id="santa_sensor" type="text" placeholder="input_boolean.christmas_season" value="${c.santa_sensor || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: when this switch/sensor is 'on', three wagons get a festive load - a snowman, Santa and a red sack of presents instead of fruit, toy blocks and firewood.")
         ) : ""}
 
         ${isTrain ? (
           booleanEntities.length > 0
-            ? this._row("Abendessen-Sensor (optional)", `
+            ? this._row("Dinner sensor (optional)", `
                 <select id="dinner_sensor" style="width:100%; padding:6px;">
-                  <option value="" ${!c.dinner_sensor ? "selected" : ""}>-- keiner (normale Ladung) --</option>
+                  <option value="" ${!c.dinner_sensor ? "selected" : ""}>-- none (normal load) --</option>
                   ${booleanEntities.map((eid) => {
                     const friendly = this._hass.states[eid]?.attributes?.friendly_name || eid;
                     return `<option value="${eid}" ${c.dinner_sensor === eid ? "selected" : ""}>${friendly}</option>`;
                   }).join("")}
                 </select>
-              `, "Optional: ist dieser Schalter/Sensor 'an', tragen drei Waggons Geschirr, ein Braten und Getränke statt Obst, Bauklötzen und Holzscheiten. Weihnachten hat Vorrang, falls beide Sensoren gleichzeitig an wären.")
-            : this._row("Abendessen-Sensor (optional)", `<input id="dinner_sensor" type="text" placeholder="input_boolean.schalter_abendessen" value="${c.dinner_sensor || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: ist dieser Schalter/Sensor 'an', tragen drei Waggons Geschirr, ein Braten und Getränke statt Obst, Bauklötzen und Holzscheiten.")
+              `, "Optional: when this switch/sensor is 'on', three wagons carry dishes, a roast and drinks instead of fruit, toy blocks and firewood. Christmas takes precedence if both sensors are on at the same time.")
+            : this._row("Dinner sensor (optional)", `<input id="dinner_sensor" type="text" placeholder="input_boolean.dinner_switch" value="${c.dinner_sensor || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: when this switch/sensor is 'on', three wagons carry dishes, a roast and drinks instead of fruit, toy blocks and firewood.")
         ) : ""}
 
         ${isTrain ? this._row(
-          "Personen-Waggons (optional)",
+          "Person wagons (optional)",
           personEntitiesAvailable.length > 0
             ? `
               <div id="person_entities_group" style="border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:8px; max-height:140px; overflow-y:auto;">
@@ -2958,99 +2927,99 @@ class AmbientOverlayCardEditor extends HTMLElement {
               </div>
             `
             : `<input id="person_entities" type="text" placeholder="person.marco, person.sandra" value="${(c.person_entities || "").replace(/"/g, "&quot;")}" style="width:100%; padding:6px; box-sizing:border-box;" />`,
-          "Optional: für jede angehakte Person, die gerade zuhause ist, wird hinten ein eigener Waggon mit Profilbild (falls vorhanden) oder Namens-Initiale angehängt."
+          "Optional: for every ticked person who is currently at home, a wagon with their profile picture (if available) or initial is attached at the back."
         ) : ""}
 
         ${isTrain ? (
           textEntities.length > 0
-            ? this._row("Gäste-Waggons aus Sensor (optional)", `
+            ? this._row("Guest wagons from sensor (optional)", `
                 <select id="custom_wagon_entity" style="width:100%; padding:6px;">
-                  <option value="" ${!c.custom_wagon_entity ? "selected" : ""}>-- keiner --</option>
+                  <option value="" ${!c.custom_wagon_entity ? "selected" : ""}>-- none --</option>
                   ${textEntities.map((eid) => {
                     const friendly = this._hass.states[eid]?.attributes?.friendly_name || eid;
                     return `<option value="${eid}" ${c.custom_wagon_entity === eid ? "selected" : ""}>${friendly}</option>`;
                   }).join("")}
                 </select>
-              `, "Optional: ein Sensor (z. B. input_text), in dem komma-getrennte Namen stehen (\"Marcel, Rudolf\"). Für jeden Namen wird hinten ein eigener Waggon angehängt. Hat Vorrang vor dem festen Freitext unten.")
-            : this._row("Gäste-Waggons aus Sensor (optional)", `<input id="custom_wagon_entity" type="text" placeholder="input_text.gaeste" value="${c.custom_wagon_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: ein Sensor mit komma-getrennten Namen - für jeden Namen ein eigener Waggon.")
+              `, "Optional: a sensor (e.g. input_text) containing comma-separated names (\"Marcel, Rudolf\"). A wagon is attached at the back for each name. Takes precedence over the fixed free text below.")
+            : this._row("Guest wagons from sensor (optional)", `<input id="custom_wagon_entity" type="text" placeholder="input_text.guests" value="${c.custom_wagon_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: a sensor with comma-separated names - one wagon per name.")
         ) : ""}
 
         ${isTrain ? this._row(
-          "Freitext-Waggon (optional)",
-          `<input id="custom_wagon_text" type="text" placeholder="z. B. Oma" value="${(c.custom_wagon_text || "").replace(/"/g, "&quot;")}" style="width:100%; padding:6px; box-sizing:border-box;" maxlength="60" />`,
-          "Optional: fester Text, falls oben kein Sensor gewählt ist. Mehrere Namen mit Komma trennen ergibt mehrere Waggons. Wird ganz hinten angehängt."
+          "Free-text wagon (optional)",
+          `<input id="custom_wagon_text" type="text" placeholder="e.g. Grandma" value="${(c.custom_wagon_text || "").replace(/"/g, "&quot;")}" style="width:100%; padding:6px; box-sizing:border-box;" maxlength="60" />`,
+          "Optional: fixed text if no sensor is selected above. Separate several names with commas to get several wagons. Attached at the very back."
         ) : ""}
 
         ${isWeatherAuto ? (
           weatherEntities.length > 0
-            ? this._row("Wetter-Sensor", `
+            ? this._row("Weather sensor", `
                 <select id="weather_entity" style="width:100%; padding:6px;">
-                  <option value="" ${!c.weather_entity ? "selected" : ""}>-- bitte wählen --</option>
+                  <option value="" ${!c.weather_entity ? "selected" : ""}>-- please select --</option>
                   ${weatherEntities.map((eid) => {
                     const friendly = this._hass.states[eid]?.attributes?.friendly_name || eid;
                     return `<option value="${eid}" ${c.weather_entity === eid ? "selected" : ""}>${friendly}</option>`;
                   }).join("")}
                 </select>
-              `, "Diese Wetter-Entity liefert den aktuellen Zustand (regnet, schneit, ...), nach dem sich der Effekt oben richtet.")
-            : this._row("Wetter-Sensor", `<input id="weather_entity" type="text" placeholder="weather.home" value="${c.weather_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Keine weather-Entity in HA gefunden - trag die Entity-ID hier manuell ein, z. B. weather.home.")
+              `, "This weather entity provides the current condition (raining, snowing, ...) that the effect above follows.")
+            : this._row("Weather sensor", `<input id="weather_entity" type="text" placeholder="weather.home" value="${c.weather_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "No weather entity found in HA - enter the entity ID here manually, e.g. weather.home.")
         ) : ""}
 
         ${isDog ? (
           weatherEntities.length > 0
-            ? this._row("Wetter-Sensor (optional)", `
+            ? this._row("Weather sensor (optional)", `
                 <select id="weather_entity" style="width:100%; padding:6px;">
-                  <option value="" ${!c.weather_entity ? "selected" : ""}>-- keiner (kein Schütteln) --</option>
+                  <option value="" ${!c.weather_entity ? "selected" : ""}>-- none (no shaking) --</option>
                   ${weatherEntities.map((eid) => {
                     const friendly = this._hass.states[eid]?.attributes?.friendly_name || eid;
                     return `<option value="${eid}" ${c.weather_entity === eid ? "selected" : ""}>${friendly}</option>`;
                   }).join("")}
                 </select>
-              `, "Optional: wählst du hier deine echte Wetter-Entity aus, schüttelt sich der Hund kurz, sobald diese aktuell Regen meldet.")
-            : this._row("Wetter-Sensor (optional)", `<input id="weather_entity" type="text" placeholder="weather.home" value="${c.weather_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: trägst du hier deine echte Wetter-Entity ein, schüttelt sich der Hund kurz, sobald diese aktuell Regen meldet.")
+              `, "Optional: if you select your real weather entity here, the dog shakes itself briefly whenever it reports rain.")
+            : this._row("Weather sensor (optional)", `<input id="weather_entity" type="text" placeholder="weather.home" value="${c.weather_entity || ""}" style="width:100%; padding:6px; box-sizing:border-box;" />`, "Optional: if you enter your real weather entity here, the dog shakes itself briefly whenever it reports rain.")
         ) : ""}
 
-        ${caps.count ? this._row("Anzahl / Frequenz", `
+        ${caps.count ? this._row("Amount / frequency", `
           <select id="count_preset" style="width:100%; padding:6px;">
-            <option value="low" ${c.count_preset === "low" ? "selected" : ""}>🔹 Wenig / Selten</option>
-            <option value="medium" ${c.count_preset === "medium" ? "selected" : ""}>🔷 Mittel</option>
-            <option value="high" ${c.count_preset === "high" ? "selected" : ""}>🔷 Viel / Häufig</option>
+            <option value="low" ${c.count_preset === "low" ? "selected" : ""}>🔹 Low / rare</option>
+            <option value="medium" ${c.count_preset === "medium" ? "selected" : ""}>🔷 Medium</option>
+            <option value="high" ${c.count_preset === "high" ? "selected" : ""}>🔷 High / frequent</option>
           </select>
         `, isWeatherAuto
-          ? "⚠️ Ein Wert für ALLE automatisch erkannten Effekte gemeinsam (Regen, Schnee, Hagel, Blitz, Nebel, Sturm) - nicht einzeln pro Effekt einstellbar."
-          : (COUNT_IS_INTERVAL_TEXT[c.event] || "Wie viele Partikel gleichzeitig zu sehen sind.")
+          ? "⚠️ One value shared by ALL automatically detected effects (rain, snow, hail, lightning, fog, storm) - cannot be set per effect."
+          : (COUNT_IS_INTERVAL_TEXT[c.event] || "How many particles are visible at the same time.")
         ) : ""}
 
-        ${caps.opacity ? this._row("Deckkraft / Helligkeit", `
+        ${caps.opacity ? this._row("Opacity / brightness", `
           <select id="opacity_preset" style="width:100%; padding:6px;">
-            <option value="low" ${c.opacity_preset === "low" ? "selected" : ""}>👻 Zart (30%)</option>
-            <option value="medium" ${c.opacity_preset === "medium" ? "selected" : ""}>👁️ Dezent (60%)</option>
-            <option value="high" ${c.opacity_preset === "high" ? "selected" : ""}>✨ Kräftig (100%)</option>
+            <option value="low" ${c.opacity_preset === "low" ? "selected" : ""}>👻 Subtle (30%)</option>
+            <option value="medium" ${c.opacity_preset === "medium" ? "selected" : ""}>👁️ Moderate (60%)</option>
+            <option value="high" ${c.opacity_preset === "high" ? "selected" : ""}>✨ Strong (100%)</option>
           </select>
         `, isWeatherAuto
-          ? "Ebenfalls EIN Wert für ALLE automatisch erkannten Effekte gemeinsam."
-          : "Wie stark/deutlich der Effekt sichtbar ist."
+          ? "Also ONE value shared by ALL automatically detected effects."
+          : "How strongly/clearly the effect is visible."
         ) : ""}
 
-        ${caps.color ? this._row("Farbmodus", `
+        ${caps.color ? this._row("Colour mode", `
           <select id="color_mode" style="width:100%; padding:6px;">
-            <option value="auto" ${colorMode === "auto" ? "selected" : ""}>🌗 Auto (Theme-Abgleich)</option>
-            <option value="custom" ${colorMode === "custom" ? "selected" : ""}>🎨 Manuelle Farbe</option>
+            <option value="auto" ${colorMode === "auto" ? "selected" : ""}>🌗 Auto (match theme)</option>
+            <option value="custom" ${colorMode === "custom" ? "selected" : ""}>🎨 Custom colour</option>
           </select>
         `, isWeatherAuto
-          ? "Gilt nur, wenn gerade Regen, Schnee, Hagel, Nebel oder Sturm aktiv ist (nicht bei Blitz - der hat immer weißes Licht)."
-          : "Farbe automatisch nach Hell/Dunkel-Modus wählen oder selbst festlegen."
+          ? "Only applies while rain, snow, hail, fog or storm is active (not lightning - it always has white light)."
+          : "Pick the colour automatically from light/dark mode or set it yourself."
         ) : ""}
 
         ${caps.color && colorMode === "custom" ? `
         <div id="custom_color_picker">
-          ${this._row("Farbe", `<input id="color" type="color" value="${c.color === "auto" ? "#ffffff" : c.color}" style="width:100%; height:36px;" />`)}
+          ${this._row("Colour", `<input id="color" type="color" value="${c.color === "auto" ? "#ffffff" : c.color}" style="width:100%; height:36px;" />`)}
         </div>` : ""}
       </div>
     `;
 
     this.querySelector("#event").addEventListener("change", (e) => this._update("event", e.target.value, true));
 
-    // Ankreuzfelder der Sammel-Effekte (Geburtstag, Nachthimmel)
+    // Checkboxes for the combined effects (birthday, night sky)
     this.querySelectorAll(".part-toggle").forEach((box) => {
       box.addEventListener("change", (e) => {
         this._update(e.target.dataset.key, e.target.checked, false);
@@ -3142,12 +3111,12 @@ class AmbientOverlayCardEditor extends HTMLElement {
     const c = this._config;
     if (!c || c.event === "off") {
       stage.innerHTML = "";
-      msg.textContent = "Kein Effekt ausgewählt.";
+      msg.textContent = "No effect selected.";
       return;
     }
     if (c.event === "weather_auto") {
       stage.innerHTML = "";
-      msg.textContent = "Vorschau nicht verfügbar bei 'Automatisch' - hängt vom aktuellen Live-Wetter ab.";
+      msg.textContent = "Preview not available for 'Automatic' - it depends on the current live weather.";
       return;
     }
     const renderer = RENDERERS[c.event];
@@ -3157,12 +3126,12 @@ class AmbientOverlayCardEditor extends HTMLElement {
       return;
     }
     msg.textContent = "";
-    // Verbesserung (Bugfix): bei "Auto"-Farbmodus würde der Effekt sonst
-    // die Farbe des ECHTEN Home-Assistant-Editor-Fensters übernehmen (das
-    // kann hell sein) - unsere Vorschau-Box hat aber immer einen dunklen
-    // Hintergrund. Ohne diese Korrektur wären z. B. schwarze Regentropfen
-    // auf dunklem Grund unsichtbar. Die Vorschau erzwingt deshalb eine
-    // helle Farbe, unabhängig vom echten Dashboard-Theme.
+    // Improvement (bugfix): in "auto" colour mode the effect would otherwise
+    // take the colour of the REAL Home Assistant editor window (which can be
+    // light) - but our preview box always has a dark background. Without this
+    // correction e.g. black raindrops would be invisible on the dark
+    // background. The preview therefore forces a light colour, regardless of
+    // the real dashboard theme.
     const caps = EVENT_CAPABILITIES[c.event] || {};
     const previewCfg = (caps.color && (c.color_mode || "auto") === "auto")
       ? { ...c, color: "#ffffff" }
@@ -3194,7 +3163,7 @@ class AmbientOverlayCardEditor extends HTMLElement {
   }
 }
 
-/* ============================== REGISTRIERUNG ============================== */
+/* ============================== REGISTRATION ============================== */
 
 if (!customElements.get("ambient-overlay-card")) {
   customElements.define("ambient-overlay-card", AmbientOverlayCard);
@@ -3207,6 +3176,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "ambient-overlay-card",
   name: "Ambient Overlay Card",
-  description: "Stimmungsvolle Overlay-Effekte fürs Dashboard: Wetter, Himmel, Tiere, Deko und Anlässe - mit universellem Theme-Support.",
+  description: "Atmospheric overlay effects for your dashboard: weather, sky, animals, decorations and occasions - with universal theme support.",
   preview: false,
 });
