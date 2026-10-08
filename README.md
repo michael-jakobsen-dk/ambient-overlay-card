@@ -2,9 +2,9 @@
 >
 > A fork of [misterm2310/ambient-overlay-card](https://github.com/misterm2310/ambient-overlay-card), which adds:
 >
-> * 🎃 **A one-line Halloween theme**: `type: custom:halloween-card` brings bats, random Halloween figures
->   (skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire), crawling spiders and spider swarms,
->   a spider web, autumn leaves and a night sky. See [Halloween add-ons](#-halloween-add-ons).
+> * 🎃 **A one-line Halloween theme**: `type: custom:halloween-card` brings 🦇 bats,
+>   💀👻🧟🎃🧙🐈‍⬛🧛 random Halloween figures, 🕷️ crawling spiders and spider swarms, 🕸️ a spider web,
+>   🍂 autumn leaves and 🌙 a night sky. See [Halloween add-ons](#-halloween-add-ons).
 > * 🇬🇧 **English everywhere**: editor UI, code comments and README (the original is in German).
 >   The card's behaviour and options are unchanged.
 >
@@ -353,9 +353,16 @@ These effects **cannot** be selected on their own. They only appear when `event:
 
 ## 🎃 Halloween add-ons
 
-Added in this fork: three Lovelace cards that put your dashboard into Halloween mode.
+Added in this fork: three Lovelace cards that put your dashboard into Halloween mode. Together they bring:
+
+* 🦇 **Bats** flapping across the screen, with adjustable size and speed
+* 💀👻☠️🧟🎃🧙🐈‍⬛🧻🧛 **Large Halloween figures** (skeleton, ghost, skull, zombie, pumpkin, witch, cat, mummy, vampire) that walk, float, hop or fly past every few minutes
+* 🕷️ **Crawling spiders**: now and then one big spider, or a whole **swarm of up to 10**, scuttles across the screen
+* 🕸️ A **spider web** in the corner, 🍂 **orange/purple autumn leaves** and a 🌙 **night sky** with shooting stars (from Ambient Overlay Card)
 
 ![The Halloween figures](images/halloween-figures.png)
+
+![A spider swarm crossing the screen](images/halloween-spider-swarm.png)
 
 ### `halloween-card`: the whole theme in one card
 
@@ -363,7 +370,7 @@ Added in this fork: three Lovelace cards that put your dashboard into Halloween 
 type: custom:halloween-card
 ```
 
-That one line gives you everything: bats, the random Halloween figures and spider swarms, plus a spider web, orange/purple autumn leaves and the night sky from Ambient Overlay Card. When Halloween is over, delete the card.
+That one line gives you everything: bats, the random Halloween figures, crawling spiders and spider swarms, plus a spider web, orange/purple autumn leaves and the night sky from Ambient Overlay Card. When Halloween is over, delete the card.
 
 Every part is on by default. Set a part to `false` to turn it off, or give it an object to change its options. The options are the same as on the individual cards described below.
 
